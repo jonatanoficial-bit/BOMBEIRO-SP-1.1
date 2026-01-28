@@ -1,7 +1,32 @@
 /* app.js - Bombeiro SP (Checklist + Relatório PDF via Print + Engine de Dimensionamento) */
 import { dbPutVistoria, dbListVistorias, dbDeleteVistoria, dbGetVistoria } from "./db.js";
-import { buildChecklist, PACK_INFO, computeSizing as packComputeSizing } from "./rules_sp_base.js";
 import { runSizing } from "./rules_engine.js";
+
+const PACK_MAP = {
+  SP_OFICIAL: "./rules_sp_oficial.js",
+  SP_BASE: "./rules_sp_base.js",
+  RJ_BASE: "./rules_rj_base.js",
+};
+
+let __PACK = null;
+
+function getPackId(){
+  return localStorage.getItem("PACK_ID") || "SP_OFICIAL";
+}
+
+async function loadPack(packId){
+  const id = PACK_MAP[packId] ? packId : "SP_OFICIAL";
+  localStorage.setItem("PACK_ID", id);
+  const mod = await import(PACK_MAP[id]);
+  __PACK = {
+    id,
+    info: mod.PACK_INFO,
+    buildChecklist: mod.buildChecklist,
+    computeSizing: mod.computeSizing,
+  };
+  return __PACK;
+}
+
 
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
@@ -123,8 +148,10 @@ $("#btnNova").addEventListener("click", () => toRoute("#/nova"));
 $("#btnSalvas").addEventListener("click", () => toRoute("#/salvas"));
 $("#btnVoltarHome").addEventListener("click", () => toRoute("#/home"));
 $("#btnRecarregarLista").addEventListener("click", async () => { await renderLista(); showToast("🔄 Lista atualizada."); });
-$("#btnPacote").addEventListener("click", () => showToast(`📦 Pacote ativo: ${PACK_INFO.name} v${PACK_INFO.version}`));
-
+$("#btnPacote").addEventListener("click", () => {
+  const info = (__PACK && __PACK.info) ? __PACK.info : {nome:"(desconhecido)", versao:"?"};
+  showToast(`📦 Pacote ativo: ${info.nome || info.name} v${info.versao || info.version}`);
+});
 /* ===== Estado ===== */
 let currentVistoriaId = null;
 let lastSavedId = null;
@@ -317,9 +344,9 @@ async function loadChecklistView(id){
   $("#chkLocalTitle").textContent = local.nomeLocal ? local.nomeLocal : "Local";
   const tipo = local.tipoLocal === "evento" ? "Evento" : "Comércio";
   $("#chkLocalSub").textContent = `${tipo} • ${local.area_m2 ?? "-"} m² • ${local.pavimentos ?? "-"} pav. • ${local.endereco ?? ""}`;
-  $("#packInfo").textContent = `${PACK_INFO.name} v${PACK_INFO.version}`;
+  $("#packInfo").textContent = `${__PACK.info.name} v${__PACK.info.version}`;
 
-  currentSections = buildChecklist({ tipoLocal: local.tipoLocal, riscos: local.riscos || [] });
+  currentSections = __PACK.buildChecklist({ tipoLocal: local.tipoLocal, riscos: local.riscos || [] });
   currentAnswers = (v.checklist && v.checklist.answers) ? structuredClone(v.checklist.answers) : {};
 
   sanitizeAnswers();
@@ -735,7 +762,7 @@ async function loadRelatorioView(id){
   currentVistoriaId = id;
 
   const local = v.local || {};
-  currentSections = buildChecklist({ tipoLocal: local.tipoLocal, riscos: local.riscos || [] });
+  currentSections = __PACK.buildChecklist({ tipoLocal: local.tipoLocal, riscos: local.riscos || [] });
   currentAnswers = (v.checklist && v.checklist.answers) ? structuredClone(v.checklist.answers) : {};
   for (const sec of currentSections) for (const it of sec.items) {
     if (!currentAnswers[it.id]) currentAnswers[it.id] = { status: "pendente", note: "", photos: [] };
@@ -763,7 +790,7 @@ async function loadRelatorioView(id){
         <h2>Relatório de Adequações para Regularização</h2>
         <div class="rep-sub">
           Bombeiro SP • ${escapeHtml(tipo)} • Gerado em ${escapeHtml(formatDateTime(Date.now()))}<br>
-          Pacote: ${escapeHtml(PACK_INFO.name)} v${escapeHtml(PACK_INFO.version)}
+          Pacote: ${escapeHtml(__PACK.info.name)} v${escapeHtml(__PACK.info.version)}
         </div>
       </div>
     </div>
@@ -831,7 +858,7 @@ async function loadRelatorioView(id){
       <h3>Dimensionamento e Recomendações (Pacote)</h3>
       <div class="rep-item">
         <div class="rep-note">
-          Pacote: ${escapeHtml(sizing?.pack?.name || PACK_INFO.name)} v${escapeHtml(sizing?.pack?.version || PACK_INFO.version)}<br>
+          Pacote: ${escapeHtml(sizing?.pack?.name || __PACK.info.name)} v${escapeHtml(sizing?.pack?.version || __PACK.info.version)}<br>
           Observação: o pacote base não contém valores normativos oficiais; ele gera recomendações orientativas e estrutura para o pacote oficial.
         </div>
       </div>
@@ -973,6 +1000,32 @@ async function handleRoute(){
   setActiveView("#viewHome");
 }
 
-window.addEventListener("hashchange", () => { handleRoute(); });
-if (!location.hash) location.hash = "#/home";
-handleRoute();
+(async () => {
+  // Init pack selector
+  const sel = document.querySelector("#packSelect");
+  if (sel){
+    sel.value = getPackId();
+    sel.addEventListener("change", async () => {
+      setBusy(true, "Carregando pacote", "Aplicando normas...");
+      try{
+        await loadPack(sel.value);
+        showToast("✅ Pacote aplicado.");
+        // Recarrega a tela atual para refletir regras do pacote
+        await handleRoute();
+      } finally {
+        setBusy(false);
+      }
+    });
+  }
+
+  setBusy(true, "Iniciando", "Carregando pacote...");
+  try{
+    await loadPack(getPackId());
+  } finally {
+    setBusy(false);
+  }
+
+  window.addEventListener("hashchange", () => { handleRoute(); });
+  if (!location.hash) location.hash = "#/home";
+  await handleRoute();
+})();
