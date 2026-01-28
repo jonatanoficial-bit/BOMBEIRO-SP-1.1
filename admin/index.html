@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Admin de Normas - Bombeiro</title>
+<link rel="stylesheet" href="../styles.css"/>
+</head>
+<body>
+<div class="topbar"><strong>Admin de Normas</strong></div>
+<div class="container">
+  <div class="card">
+    <h2>Cadastrar / Editar Normas (JSON)</h2>
+    <textarea id="jsonInput" class="textarea" rows="16" placeholder='Cole aqui o JSON de normas'></textarea>
+    <button class="btn" onclick="save()">Salvar Localmente</button>
+  </div>
+  <div class="card">
+    <h3>Importar / Exportar</h3>
+    <input type="file" id="fileInput"/>
+    <button class="btn" onclick="load()">Importar</button>
+    <button class="btn" onclick="exportJson()">Exportar</button>
+  </div>
+</div>
+<script src="admin.js"></script>
+</body>
+</html>
