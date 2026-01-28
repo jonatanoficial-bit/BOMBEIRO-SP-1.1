@@ -68,7 +68,7 @@ function escapeHtml(s){
 }
 
 function escapeHtmlBr(s){
-  return escapeHtml(s).replaceAll(\"\n\",\"<br>\");
+  return escapeHtml(s).replaceAll("\n","<br>");
 }
 
 function getHashParams(){
@@ -520,7 +520,7 @@ function setItemStatus(itemId, status, itemEl){
     }
   });
   updateKpis();
-  scheduleAutosave(\"status\");
+  scheduleAutosave("status");
 }
 
 function renderPhotos(itemId, wrap){
