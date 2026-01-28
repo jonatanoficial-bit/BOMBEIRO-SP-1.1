@@ -1,0 +1,19 @@
+{
+  "name": "Bombeiro SP",
+  "short_name": "Bombeiro SP",
+  "description": "App de inspeção, prevenção e auxílio técnico para adequações (AVCB/LAVCB) com checklist profissional.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f0f",
+  "theme_color": "#c40000",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

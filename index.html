@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#c40000" />
+  <title>Bombeiro SP</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+
+  <!-- Fonte -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="navbtn" href="#/home" aria-label="Ir para Home">🏠</a>
+
+      <div class="brand" style="flex:1;">
+        <img src="./icon.svg" alt="Ícone Bombeiro SP">
+        <div class="brand-title">
+          <h1>BOMBEIRO SP</h1>
+          <p>Inspeção • Prevenção • AVCB • LAVCB</p>
+        </div>
+      </div>
+
+      <div class="pill" id="btnInstall" style="display:none; cursor:pointer;">
+        <span class="dot"></span>
+        INSTALAR
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- VIEW: HOME -->
+    <section class="view" id="viewHome">
+      <section class="hero">
+        <img class="hero-cover" src="./cover.svg" alt="Capa Bombeiro SP">
+        <div class="hero-body">
+          <h2>Vistoria rápida, relatório profissional</h2>
+          <p>
+            Checklists inteligentes para comércio e eventos, com pendências, fotos e geração de PDF técnico
+            (adequações para regularização).
+          </p>
+
+          <div class="row" style="margin-top:14px;">
+            <button class="btn" id="btnNova">Nova vistoria</button>
+            <button class="btn btn-secondary" id="btnSalvas">Vistorias salvas</button>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <button class="btn btn-amber" id="btnPacote">📦 Pacote SP</button>
+          </div>
+
+          <div class="note" style="margin-top:14px;">
+            <b>Importante:</b> o app gera documento de adequações para o contratante. Procedimentos oficiais seguem o CBPMESP.
+          </div>
+        </div>
+      </section>
+
+      <div class="footer">
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong>
+      </div>
+    </section>
+
+    <!-- VIEW: NOVA VISTORIA -->
+    <section class="view" id="viewNova">
+      <div class="page-title">Nova Vistoria</div>
+
+      <form class="form" id="formNova" autocomplete="off">
+        <div class="field">
+          <div class="label">
+            <span>Tipo de local</span>
+            <span class="hint">Comércio ou Evento</span>
+          </div>
+          <select class="select" id="tipoLocal" required>
+            <option value="" selected disabled>Selecione…</option>
+            <option value="comercio">Comércio</option>
+            <option value="evento">Evento</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <div class="label">
+            <span>Nome do local</span>
+            <span class="hint">Ex.: Mercado X / Festa Y</span>
+          </div>
+          <input class="input" id="nomeLocal" placeholder="Digite o nome" required />
+        </div>
+
+        <div class="field">
+          <div class="label">
+            <span>Endereço</span>
+            <span class="hint">Rua, nº, bairro, cidade</span>
+          </div>
+          <input class="input" id="endereco" placeholder="Digite o endereço" required />
+        </div>
+
+        <div class="split">
+          <div class="field">
+            <div class="label">
+              <span>Área (m²)</span>
+              <span class="hint">Obrigatório</span>
+            </div>
+            <input class="input" id="area" inputmode="decimal" placeholder="Ex.: 250" required />
+          </div>
+
+          <div class="field">
+            <div class="label">
+              <span>Pavimentos</span>
+              <span class="hint">Obrigatório</span>
+            </div>
+            <input class="input" id="pavimentos" inputmode="numeric" placeholder="Ex.: 2" required />
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="field">
+            <div class="label">
+              <span>Altura (m)</span>
+              <span class="hint">Opcional</span>
+            </div>
+            <input class="input" id="altura" inputmode="decimal" placeholder="Ex.: 6" />
+          </div>
+
+          <div class="field">
+            <div class="label">
+              <span>Lotação</span>
+              <span class="hint">Opcional</span>
+            </div>
+            <input class="input" id="lotacao" inputmode="numeric" placeholder="Ex.: 120" />
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">
+            <span>Riscos / Características</span>
+            <span class="hint">Marque o que existir</span>
+          </div>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" class="risco" value="cozinha"> Cozinha</label>
+            <label class="chip"><input type="checkbox" class="risco" value="glp"> GLP</label>
+            <label class="chip"><input type="checkbox" class="risco" value="inflamaveis"> Inflamáveis</label>
+            <label class="chip"><input type="checkbox" class="risco" value="subsolo"> Subsolo</label>
+            <label class="chip"><input type="checkbox" class="risco" value="palco"> Palco/Estrutura</label>
+            <label class="chip"><input type="checkbox" class="risco" value="som_luz"> Som/Luz</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">
+            <span>Observações iniciais</span>
+            <span class="hint">Opcional</span>
+          </div>
+          <textarea class="textarea" id="obs" placeholder="Observações gerais (ex.: saída única, corredor estreito, etc.)"></textarea>
+        </div>
+
+        <div class="row">
+          <button type="button" class="btn btn-secondary" id="btnCancelarNova">Cancelar</button>
+          <button type="submit" class="btn">Salvar e ir ao checklist</button>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button type="button" class="btn btn-amber" id="btnIrChecklist" disabled>Ir para checklist</button>
+        </div>
+      </form>
+
+      <div class="footer">
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong>
+      </div>
+    </section>
+
+    <!-- VIEW: SALVAS -->
+    <section class="view" id="viewSalvas">
+      <div class="page-title">Vistorias Salvas</div>
+
+      <div class="card">
+        <h3>📋 Lista offline</h3>
+        <p>Estas vistorias ficam salvas no seu aparelho (IndexedDB).</p>
+        <div class="row">
+          <button class="btn btn-secondary" id="btnVoltarHome">Voltar</button>
+          <button class="btn" id="btnRecarregarLista">Recarregar</button>
+        </div>
+      </div>
+
+      <div class="list" id="listaVistorias"></div>
+
+      <div class="footer">
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong>
+      </div>
+    </section>
+
+    <!-- VIEW: CHECKLIST -->
+    <section class="view" id="viewChecklist">
+      <div class="page-title">Checklist</div>
+
+      <div class="card">
+        <div class="chk-head">
+          <div>
+            <h3 id="chkLocalTitle">Local</h3>
+            <p class="muted" id="chkLocalSub">—</p>
+          </div>
+          <div class="pack">
+            <span class="dot"></span>
+            <span id="packInfo">—</span>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <div class="kpi-label">Progresso</div>
+            <div class="kpi-value" id="kpiProgress">0%</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Pendentes</div>
+            <div class="kpi-value" id="kpiPend">0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Não conforme</div>
+            <div class="kpi-value" id="kpiBad">0</div>
+          </div>
+        </div>
+
+        <div class="progress">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <button class="btn btn-secondary" id="btnVoltarSalvas">Voltar</button>
+          <button class="btn btn-secondary" id="btnEditarDados">Editar dados</button>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="btnSalvarChecklist">Salvar</button>
+          <button class="btn btn-amber" id="btnGerarRelatorio">Gerar relatório</button>
+        </div>
+      </div>
+
+      <div id="chkContent"></div>
+
+      <div class="footer">
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong>
+      </div>
+    </section>
+
+    <!-- VIEW: RELATÓRIO -->
+    <section class="view" id="viewRelatorio">
+      <div class="page-title">Relatório</div>
+
+      <div class="card">
+        <h3>📄 Exportar PDF</h3>
+        <p>Use o botão abaixo para imprimir ou salvar como PDF.</p>
+        <div class="row">
+          <button class="btn btn-secondary" id="btnVoltarChecklist">Voltar</button>
+          <button class="btn btn-amber" id="btnPrint">Imprimir / Salvar PDF</button>
+        </div>
+      </div>
+
+      <div class="report" id="reportBox"></div>
+
+      <div class="footer">
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span class="t-dot"></span>
+    <span id="toastText">Ok</span>
+  </div>
+
+
+  <!-- Overlay (carregando / processando) -->
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="overlay-card" role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <div>
+        <div class="overlay-title" id="overlayTitle">Processando…</div>
+        <div class="overlay-sub" id="overlaySub">Aguarde</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
