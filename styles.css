@@ -741,3 +741,37 @@ body::before{
   .btn,.card,.overlay{ transition:none !important; }
   .spinner{ animation:none !important; }
 }
+
+
+/* Save hint */
+.savehint{
+  margin-top:10px;
+  font-size: 12.5px;
+  color: rgba(255,255,255,.78);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.savehint::before{
+  content:"";
+  width:8px;height:8px;border-radius:999px;
+  background: rgba(255,255,255,.35);
+  box-shadow: 0 0 0 4px rgba(255,255,255,.08);
+}
+.savehint.saving::before{ background: rgba(255,204,0,.95); box-shadow: 0 0 0 4px rgba(255,204,0,.18); }
+.savehint.saved::before{ background: rgba(46, 204, 113, .95); box-shadow: 0 0 0 4px rgba(46, 204, 113,.18); }
+.savehint.error::before{ background: rgba(255, 80, 80, .95); box-shadow: 0 0 0 4px rgba(255, 80, 80,.18); }
+
+.invalid{
+  border-color: rgba(255,80,80,.85) !important;
+  box-shadow: 0 0 0 4px rgba(255,80,80,.16) !important;
+}
+
+@media print{
+  body::before{ display:none !important; }
+  .overlay{ display:none !important; }
+  .rep-title{ page-break-after: avoid; }
+  .rep-block{ page-break-inside: avoid; break-inside: avoid; }
+  .rep-item{ page-break-inside: avoid; break-inside: avoid; }
+  .rep-photos img{ max-height: 220px; }
+}

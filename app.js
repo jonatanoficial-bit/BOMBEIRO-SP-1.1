@@ -42,6 +42,14 @@ function parseNumberSafe(v){
   return Number.isFinite(n) ? n : null;
 }
 
+function markInvalid(el){
+  if (!el) return;
+  el.classList.add("invalid");
+  el.focus?.();
+  const clear = () => el.classList.remove("invalid");
+  el.addEventListener("input", clear, { once:true });
+}
+
 function formatDateTime(ts){
   const d = new Date(ts);
   const pad = (x)=> String(x).padStart(2,"0");
@@ -57,6 +65,10 @@ function escapeHtml(s){
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
+}
+
+function escapeHtmlBr(s){
+  return escapeHtml(s).replaceAll(\"\n\",\"<br>\");
 }
 
 function getHashParams(){
@@ -120,6 +132,26 @@ let currentSections = [];
 let currentAnswers = {};
 let currentSizing = null;
 
+let __autoSaveTimer = null;
+let __lastSavedAt = null;
+
+function setSaveHint(state, text){
+  const el = $("#saveHint");
+  if (!el) return;
+  el.classList.remove("saving","saved","error");
+  if (state) el.classList.add(state);
+  el.textContent = text;
+}
+
+function scheduleAutosave(reason="Alterações"){
+  if (!currentVistoriaId) return;
+  setSaveHint("saving", `Salvando automaticamente… (${reason})`);
+  clearTimeout(__autoSaveTimer);
+  __autoSaveTimer = setTimeout(async () => {
+    await saveAllNow(true);
+  }, 1200);
+}
+
 /* ===== Nova Vistoria ===== */
 $("#btnCancelarNova").addEventListener("click", () => {
   lastSavedId = null;
@@ -146,10 +178,11 @@ $("#formNova").addEventListener("submit", async (e) => {
   const riscos = $all(".risco").filter(x => x.checked).map(x => x.value);
   const obs = $("#obs").value.trim();
 
-  if (!tipoLocal || !nomeLocal || !endereco || area === null || pavimentos === null){
-    showToast("⚠️ Preencha: tipo, nome, endereço, área e pavimentos.");
-    return;
-  }
+  if (!tipoLocal){ showToast("⚠️ Informe o tipo do local."); markInvalid($("#tipoLocal")); return; }
+  if (!nomeLocal){ showToast("⚠️ Informe o nome do local."); markInvalid($("#nomeLocal")); return; }
+  if (!endereco){ showToast("⚠️ Informe o endereço."); markInvalid($("#endereco")); return; }
+  if (area === null || area <= 0){ showToast("⚠️ Informe a área (m²) corretamente."); markInvalid($("#area")); return; }
+  if (pavimentos === null || pavimentos < 1){ showToast("⚠️ Informe a quantidade de pavimentos (mínimo 1)."); markInvalid($("#pavimentos")); return; }
 
   const now = Date.now();
   const id = genId();
@@ -289,6 +322,8 @@ async function loadChecklistView(id){
   currentSections = buildChecklist({ tipoLocal: local.tipoLocal, riscos: local.riscos || [] });
   currentAnswers = (v.checklist && v.checklist.answers) ? structuredClone(v.checklist.answers) : {};
 
+  sanitizeAnswers();
+
   for (const sec of currentSections) {
     for (const it of sec.items) {
       if (!currentAnswers[it.id]) currentAnswers[it.id] = { status: "pendente", note: "", photos: [] };
@@ -304,6 +339,8 @@ async function loadChecklistView(id){
 
   renderChecklistUI(local, savedSizing.inputs || {});
   updateKpis();
+  __lastSavedAt = v?.checklist?.lastSavedAt || null;
+  setSaveHint(__lastSavedAt ? "saved" : null, __lastSavedAt ? `Salvo em ${formatDateTime(__lastSavedAt)}` : "Não salvo");
 
   } finally {
     setBusy(false);
@@ -428,7 +465,7 @@ function renderChecklistUI(local, sizingInputs){
 
       // Note
       const ta = itemEl.querySelector("textarea");
-      ta.addEventListener("input", () => { currentAnswers[it.id].note = ta.value; updateKpis(); });
+      ta.addEventListener("input", () => { currentAnswers[it.id].note = ta.value; updateKpis(); scheduleAutosave("anotações"); });
 
       // Photos
       const photosWrap = itemEl.querySelector(".photos");
@@ -444,6 +481,7 @@ function renderChecklistUI(local, sizingInputs){
           currentAnswers[it.id].photos.push({ id: "p_" + Date.now(), dataUrl });
           renderPhotos(it.id, photosWrap);
           updateKpis();
+          scheduleAutosave("fotos");
           showToast("📷 Foto adicionada.");
         }catch(e){
           showToast("❌ Falha ao adicionar foto.");
@@ -456,6 +494,7 @@ function renderChecklistUI(local, sizingInputs){
         const ok = confirm("Limpar status, observação e fotos deste item?");
         if (!ok) return;
         currentAnswers[it.id] = { status: "pendente", note: "", photos: [] };
+        scheduleAutosave("limpeza");
         renderChecklistUI(local, readSizingInputsFromUI());
         updateKpis();
       });
@@ -481,6 +520,7 @@ function setItemStatus(itemId, status, itemEl){
     }
   });
   updateKpis();
+  scheduleAutosave(\"status\");
 }
 
 function renderPhotos(itemId, wrap){
@@ -496,6 +536,7 @@ function renderPhotos(itemId, wrap){
       currentAnswers[itemId].photos = currentAnswers[itemId].photos.filter(x => x.id !== p.id);
       renderPhotos(itemId, wrap);
       updateKpis();
+      scheduleAutosave("fotos");
     });
     wrap.appendChild(d);
   });
@@ -517,6 +558,14 @@ function computeStats(){
   const done = ok + na;
   const progress = total > 0 ? Math.round((done / total) * 100) : 0;
   return { total, ok, pend, bad, na, progress };
+}
+
+function sanitizeAnswers(){
+  const validIds = new Set();
+  for (const sec of currentSections) for (const it of sec.items) validIds.add(it.id);
+  for (const id of Object.keys(currentAnswers)){
+    if (!validIds.has(id)) delete currentAnswers[id];
+  }
 }
 
 function updateKpis(){
@@ -550,7 +599,10 @@ async function saveSizingInputs(){
   v.sizing.inputs = readSizingInputsFromUI();
   v.updatedAt = Date.now();
 
+  setSaveHint("saving","Salvando automaticamente… (dimensionamento)");
   await dbPutVistoria(v);
+  __lastSavedAt = v.updatedAt;
+  setSaveHint("saved", `Salvo em ${formatDateTime(__lastSavedAt)}`);
   currentSizing = v.sizing;
 }
 
@@ -601,7 +653,7 @@ function renderSizingResult(sizing){
   box.style.display = "block";
   hint.textContent = `${sizing.pack?.name || "Pacote"} v${sizing.pack?.version || "?"}`;
 
-  const warnings = (sizing.warnings || []).map(w => `<div class="rep-item"><div class="rep-note">⚠️ ${escapeHtml(w)}</div></div>`).join("");
+  const warnings = (sizing.warnings || []).map(w => `<div class="rep-item"><div class="rep-note">⚠️ ${escapeHtmlBr(w)}</div></div>`).join("");
 
   const results = (sizing.results || []).map(r => {
     const sev = r.severity || "info";
@@ -614,7 +666,7 @@ function renderSizingResult(sizing){
         <div class="rep-badge ${badgeClass}">${sev.toUpperCase()}</div>
         ${r.summary ? `<div class="rep-note">${escapeHtml(r.summary)}</div>` : ""}
         ${r.details ? `<div class="rep-note">${escapeHtml(r.details)}</div>` : ""}
-        ${refs ? `<div class="rep-note">${escapeHtml(refs)}</div>` : ""}
+        ${refs ? `<div class="rep-note">${escapeHtmlBr(refs)}</div>` : ""}
       </div>
     `;
   }).join("");
@@ -623,7 +675,7 @@ function renderSizingResult(sizing){
 }
 
 /* ===== Persistência geral ===== */
-async function saveAllNow(){
+async function saveAllNow(silent=false){
   setBusy(true, "Salvando vistoria", "Gravando dados\u2026");
   try{
   if (!currentVistoriaId) return;
@@ -647,9 +699,12 @@ async function saveAllNow(){
 
   try{
     await dbPutVistoria(v);
-    showToast("✅ Salvo offline.");
+    __lastSavedAt = now;
+    setSaveHint("saved", `Salvo em ${formatDateTime(now)}`);
+    if (!silent) showToast("✅ Salvo offline.");
   }catch(e){
-    showToast("❌ Falha ao salvar.");
+    setSaveHint("error", "Falha ao salvar (offline)");
+    if (!silent) showToast("❌ Falha ao salvar.");
   }
 
   } finally {
@@ -761,11 +816,11 @@ async function loadRelatorioView(id){
       <h3>Pendências e Não Conformidades</h3>
       <div class="rep-item">
         <h4>Não conforme (prioridade)</h4>
-        <div class="rep-note">${escapeHtml(criticos || "Nenhum item marcado como NÃO CONFORME.")}</div>
+        <div class="rep-note">${escapeHtmlBr(criticos || "Nenhum item marcado como NÃO CONFORME.")}</div>
       </div>
       <div class="rep-item">
         <h4>Pendente</h4>
-        <div class="rep-note">${escapeHtml(pendTxt || "Nenhum item marcado como PENDENTE.")}</div>
+        <div class="rep-note">${escapeHtmlBr(pendTxt || "Nenhum item marcado como PENDENTE.")}</div>
       </div>
     </div>
   `;
@@ -786,7 +841,7 @@ async function loadRelatorioView(id){
     dimBlock += `
       <div class="rep-item">
         <h4>Avisos</h4>
-        <div class="rep-note">${escapeHtml(sizing.warnings.map(w => "• " + w).join("\n"))}</div>
+        <div class="rep-note">${escapeHtmlBr(sizing.warnings.map(w => "• " + w).join("\n"))}</div>
       </div>
     `;
   }
@@ -803,7 +858,7 @@ async function loadRelatorioView(id){
           <div class="rep-badge ${badgeClass}">${escapeHtml(sev.toUpperCase())}</div>
           ${r.summary ? `<div class="rep-note">${escapeHtml(r.summary)}</div>` : ""}
           ${r.details ? `<div class="rep-note">${escapeHtml(r.details)}</div>` : ""}
-          ${refs ? `<div class="rep-note">${escapeHtml(refs)}</div>` : ""}
+          ${refs ? `<div class="rep-note">${escapeHtmlBr(refs)}</div>` : ""}
         </div>
       `;
     }
