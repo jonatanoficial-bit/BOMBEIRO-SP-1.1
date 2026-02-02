@@ -1,0 +1,9 @@
+BOMBEIRO SP - v1.4 (02/02/2026)
+
+Automação SP (MVP) atualizada com referências 2025:
+- Extintores: IT-21/2025 (mínimos por pavimento + distâncias 25/20/15m)
+- Sinalização: IT-20/2025 (checklist inteligente)
+- Iluminação: IT-18/2025 + NBR 10898 (checklist inteligente)
+- Brigada: estrutura pronta + parametrização via Admin (modelo SP 2025)
+
+Ajuste parâmetros no /admin conforme sua base normativa e enquadramento do local.

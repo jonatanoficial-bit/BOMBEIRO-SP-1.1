@@ -1,0 +1,10 @@
+BOMBEIRO 1.6 – RJ (vigente) – 02/02/2026
+
+Atualização de referências e checklist conforme normas CBMERJ disponíveis no site oficial:
+
+- COSCIP: Decreto RJ nº 42 (17/12/2018), alterado pelo Decreto nº 46.925 (05/02/2020) – versão compilada CBMERJ.
+- NT 2-01 (2ª ed. 2020): Extintores (cálculo automático permanece parametrizado no /admin).
+- NT 2-05 (3ª ed. 2023): Sinalização (checklist inteligente).
+- NT 2-06 (1ª ed. 2019): Iluminação (checklist inteligente; adota NBR 10898:2013).
+
+Observação: Dimensionamentos detalhados (tabelas completas) podem ser adicionados em atualizações/DLC.

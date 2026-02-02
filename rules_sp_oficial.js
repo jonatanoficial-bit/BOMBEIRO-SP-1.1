@@ -12,10 +12,9 @@ import { SP_TABLES, mkRef, mkResult } from "./sp_tables.js";
 export const PACK_INFO = {
   id: "sp-oficial",
   name: "São Paulo (Oficial)",
-  version: "0.2.0",
-  updatedAt: "2025-12-29",
-  note:
-    "Estrutura oficial (refs + validações + tabelas plugáveis). Tabelas numéricas ainda não ativadas."
+  version: "1.0.0",
+  updatedAt: "2026-02-02",
+  note: "Pacote SP com automação (MVP) baseado em ITs 2025 + Admin configurável. Offline-first."
 };
 
 /* ===== Base de Referências (metadados) ===== */

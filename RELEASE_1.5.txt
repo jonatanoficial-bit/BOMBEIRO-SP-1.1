@@ -1,0 +1,4 @@
+BOMBEIRO 1.5 – RJ MVP (02/02/2026)
+- Pacote RJ inicial
+- Extintores automáticos (parametrizados)
+- Pronto para expansão CBMERJ

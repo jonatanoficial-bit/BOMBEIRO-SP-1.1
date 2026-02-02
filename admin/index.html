@@ -12,7 +12,13 @@
   <div class="card">
     <h2>Cadastrar / Editar Normas (JSON)</h2>
     <textarea id="jsonInput" class="textarea" rows="16" placeholder='Cole aqui o JSON de normas'></textarea>
-    <button class="btn" onclick="save()">Salvar Localmente</button>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn" onclick="save()">Salvar Localmente</button>
+    <button class="btn" onclick="loadPresetSP2025()">Carregar Modelo SP (2025)</button>
+    <button class="btn" onclick="loadPresetRJ2023()">Carregar Modelo RJ (vigente)</button</button>
+    <p class="muted">Dica: carregue o modelo, ajuste os parâmetros conforme sua base normativa e clique em Salvar.</p>
+      <button class="btn" onclick="loadTemplate()">Carregar Modelo</button>
+    </div>
   </div>
   <div class="card">
     <h3>Importar / Exportar</h3>
