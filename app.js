@@ -1,32 +1,7 @@
 /* app.js - Bombeiro SP (Checklist + Relatório PDF via Print + Engine de Dimensionamento) */
 import { dbPutVistoria, dbListVistorias, dbDeleteVistoria, dbGetVistoria } from "./db.js";
+import { buildChecklist, PACK_INFO, computeSizing as packComputeSizing } from "./rules_sp_base.js";
 import { runSizing } from "./rules_engine.js";
-
-const PACK_MAP = {
-  SP_OFICIAL: "./rules_sp_oficial.js",
-  SP_BASE: "./rules_sp_base.js",
-  RJ_BASE: "./rules_rj_base.js",
-};
-
-let __PACK = null;
-
-function getPackId(){
-  return localStorage.getItem("PACK_ID") || "SP_OFICIAL";
-}
-
-async function loadPack(packId){
-  const id = PACK_MAP[packId] ? packId : "SP_OFICIAL";
-  localStorage.setItem("PACK_ID", id);
-  const mod = await import(PACK_MAP[id]);
-  __PACK = {
-    id,
-    info: mod.PACK_INFO,
-    buildChecklist: mod.buildChecklist,
-    computeSizing: mod.computeSizing,
-  };
-  return __PACK;
-}
-
 
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
@@ -39,7 +14,7 @@ function showToast(msg){
   window.__toastTimer = setTimeout(()=> el.classList.remove("show"), 2600);
 }
 
-function setBusy(on, title="Processando…", sub="Aguarde"){
+function setBusy(on, title="Processando...", sub="Aguarde"){
   const ov = $("#overlay");
   if (!ov) return;
   const t = $("#overlayTitle");
@@ -49,75 +24,6 @@ function setBusy(on, title="Processando…", sub="Aguarde"){
   ov.classList.toggle("show", !!on);
   ov.setAttribute("aria-hidden", on ? "false" : "true");
 }
-
-
-function toIntSafe(v){
-  const n = Math.trunc(Number(String(v ?? "").trim()));
-  return Number.isFinite(n) ? n : 0;
-}
-
-/** Gera itens de GAP (o que falta) comparando 'existe' vs 'exigido' */
-function computeGaps(sizing, inputs){
-  const gaps = [];
-  if (!sizing || !Array.isArray(sizing.results)) return gaps;
-  const existExt = toIntSafe(inputs?.extintoresExistentes);
-  const sigOk = !!inputs?.possuiSinalizacaoAtual;
-  const iluOk = !!inputs?.possuiIluminacaoAtual;
-
-  // Extintores: maior "value" dentro de Extintores
-  const extReq = sizing.results
-    .filter(r => (String(r.category||"").toLowerCase().includes("extint") || String(r.title||"").toLowerCase().includes("extint")) && r.value != null)
-    .map(r => Number(r.value))
-    .filter(n => Number.isFinite(n))
-    .sort((a,b)=>b-a)[0];
-
-  if (Number.isFinite(extReq)){
-    const req = Math.ceil(extReq);
-    const faltam = Math.max(0, req - existExt);
-    gaps.push({
-      id:"gap_ext",
-      category:"GAP",
-      title:"Extintores — o que falta",
-      summary: faltam>0 ? `Faltam ${faltam} extintor(es) (exigido ${req}, existente ${existExt}).` : `OK: existente (${existExt}) atende o mínimo estimado (${req}).`,
-      details: inputs?.existObs ? `Obs: ${inputs.existObs}` : "",
-      refs: [],
-      severity: faltam>0 ? "critical" : "info",
-      value: faltam,
-      unit: "un"
-    });
-  }
-
-  // Sinalização/Iluminação: se o pacote gerou recomendação, checar confirmação do usuário
-  const hasSig = sizing.results.some(r => String(r.title||"").toLowerCase().includes("sinaliza"));
-  const hasIlu = sizing.results.some(r => String(r.title||"").toLowerCase().includes("ilumina"));
-
-  if (hasSig){
-    gaps.push({
-      id:"gap_sig",
-      category:"GAP",
-      title:"Sinalização — status informado",
-      summary: sigOk ? "OK: sinalização indicada como instalada." : "ATENÇÃO: sinalização não confirmada. Verifique e regularize conforme o pacote.",
-      details: "",
-      refs: [],
-      severity: sigOk ? "info" : "warn"
-    });
-  }
-
-  if (hasIlu){
-    gaps.push({
-      id:"gap_ilu",
-      category:"GAP",
-      title:"Iluminação de emergência — status informado",
-      summary: iluOk ? "OK: iluminação indicada como instalada." : "ATENÇÃO: iluminação não confirmada. Verifique e regularize conforme o pacote.",
-      details: "",
-      refs: [],
-      severity: iluOk ? "info" : "warn"
-    });
-  }
-
-  return gaps;
-}
-
 
 
 function setActiveView(id){
@@ -198,7 +104,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
   $("#btnInstall").style.display = "inline-flex";
 });
 window.addEventListener("appinstalled", () => {
-  showToast("✅ Bombeiro SP instalado!");
+  showToast("[OK] Bombeiro SP instalado!");
   $("#btnInstall").style.display = "none";
 });
 document.addEventListener("click", async (e) => {
@@ -217,10 +123,8 @@ $("#btnNova").addEventListener("click", () => toRoute("#/nova"));
 $("#btnSalvas").addEventListener("click", () => toRoute("#/salvas"));
 $("#btnVoltarHome").addEventListener("click", () => toRoute("#/home"));
 $("#btnRecarregarLista").addEventListener("click", async () => { await renderLista(); showToast("🔄 Lista atualizada."); });
-$("#btnPacote").addEventListener("click", () => {
-  const info = (__PACK && __PACK.info) ? __PACK.info : {nome:"(desconhecido)", versao:"?"};
-  showToast(`📦 Pacote ativo: ${info.nome || info.name} v${info.versao || info.version}`);
-});
+$("#btnPacote").addEventListener("click", () => showToast(`📦 Pacote ativo: ${PACK_INFO.name} v${PACK_INFO.version}`));
+
 /* ===== Estado ===== */
 let currentVistoriaId = null;
 let lastSavedId = null;
@@ -241,7 +145,7 @@ function setSaveHint(state, text){
 
 function scheduleAutosave(reason="Alterações"){
   if (!currentVistoriaId) return;
-  setSaveHint("saving", `Salvando automaticamente… (${reason})`);
+  setSaveHint("saving", `Salvando automaticamente... (${reason})`);
   clearTimeout(__autoSaveTimer);
   __autoSaveTimer = setTimeout(async () => {
     await saveAllNow(true);
@@ -274,11 +178,11 @@ $("#formNova").addEventListener("submit", async (e) => {
   const riscos = $all(".risco").filter(x => x.checked).map(x => x.value);
   const obs = $("#obs").value.trim();
 
-  if (!tipoLocal){ showToast("⚠️ Informe o tipo do local."); markInvalid($("#tipoLocal")); return; }
-  if (!nomeLocal){ showToast("⚠️ Informe o nome do local."); markInvalid($("#nomeLocal")); return; }
-  if (!endereco){ showToast("⚠️ Informe o endereço."); markInvalid($("#endereco")); return; }
-  if (area === null || area <= 0){ showToast("⚠️ Informe a área (m²) corretamente."); markInvalid($("#area")); return; }
-  if (pavimentos === null || pavimentos < 1){ showToast("⚠️ Informe a quantidade de pavimentos (mínimo 1)."); markInvalid($("#pavimentos")); return; }
+  if (!tipoLocal){ showToast("[!] Informe o tipo do local."); markInvalid($("#tipoLocal")); return; }
+  if (!nomeLocal){ showToast("[!] Informe o nome do local."); markInvalid($("#nomeLocal")); return; }
+  if (!endereco){ showToast("[!] Informe o endereço."); markInvalid($("#endereco")); return; }
+  if (area === null || area <= 0){ showToast("[!] Informe a área (m²) corretamente."); markInvalid($("#area")); return; }
+  if (pavimentos === null || pavimentos < 1){ showToast("[!] Informe a quantidade de pavimentos (mínimo 1)."); markInvalid($("#pavimentos")); return; }
 
   const now = Date.now();
   const id = genId();
@@ -298,10 +202,10 @@ $("#formNova").addEventListener("submit", async (e) => {
     await dbPutVistoria(vistoria);
     lastSavedId = id;
     $("#btnIrChecklist").disabled = false;
-    showToast("✅ Vistoria salva offline.");
+    showToast("[OK] Vistoria salva offline.");
     toRoute(`#/checklist?id=${encodeURIComponent(id)}`);
   }catch(err){
-    showToast("❌ Erro ao salvar. Tente novamente.");
+    showToast("[X] Erro ao salvar. Tente novamente.");
   }
 });
 
@@ -378,7 +282,7 @@ $("#btnVoltarSalvas").addEventListener("click", () => toRoute("#/salvas"));
 $("#btnEditarDados").addEventListener("click", async () => {
   if (!currentVistoriaId) return;
   const v = await dbGetVistoria(currentVistoriaId);
-  if (!v) { showToast("⚠️ Vistoria não encontrada."); return; }
+  if (!v) { showToast("[!] Vistoria não encontrada."); return; }
   fillForm(v);
   lastSavedId = currentVistoriaId;
   $("#btnIrChecklist").disabled = false;
@@ -388,7 +292,7 @@ $("#btnEditarDados").addEventListener("click", async () => {
 $("#btnSalvarChecklist").addEventListener("click", async () => { await saveAllNow(); });
 
 $("#btnGerarRelatorio").addEventListener("click", async () => {
-  if (!currentVistoriaId) { showToast("⚠️ Abra uma vistoria."); return; }
+  if (!currentVistoriaId) { showToast("[!] Abra uma vistoria."); return; }
   await saveAllNow();
   toRoute(`#/relatorio?id=${encodeURIComponent(currentVistoriaId)}`);
 });
@@ -404,7 +308,7 @@ async function loadChecklistView(id){
   setBusy(true, "Abrindo vistoria", "Carregando checklist\u2026");
   try{
   const v = await dbGetVistoria(id);
-  if (!v){ showToast("⚠️ Vistoria não encontrada."); toRoute("#/salvas"); return; }
+  if (!v){ showToast("[!] Vistoria não encontrada."); toRoute("#/salvas"); return; }
 
   currentVistoriaId = id;
   lastSavedId = id;
@@ -413,9 +317,9 @@ async function loadChecklistView(id){
   $("#chkLocalTitle").textContent = local.nomeLocal ? local.nomeLocal : "Local";
   const tipo = local.tipoLocal === "evento" ? "Evento" : "Comércio";
   $("#chkLocalSub").textContent = `${tipo} • ${local.area_m2 ?? "-"} m² • ${local.pavimentos ?? "-"} pav. • ${local.endereco ?? ""}`;
-  $("#packInfo").textContent = `${__PACK.info.name} v${__PACK.info.version}`;
+  $("#packInfo").textContent = `${PACK_INFO.name} v${PACK_INFO.version}`;
 
-  currentSections = __PACK.buildChecklist({ tipoLocal: local.tipoLocal, riscos: local.riscos || [] });
+  currentSections = buildChecklist({ tipoLocal: local.tipoLocal, riscos: local.riscos || [] });
   currentAnswers = (v.checklist && v.checklist.answers) ? structuredClone(v.checklist.answers) : {};
 
   sanitizeAnswers();
@@ -502,7 +406,7 @@ function renderChecklistUI(local, sizingInputs){
   $("#btnDimSalvar").addEventListener("click", async (e) => {
     e.preventDefault();
     await saveSizingInputs();
-    showToast("✅ Dados de dimensionamento salvos.");
+    showToast("[OK] Dados de dimensionamento salvos.");
   });
 
   $("#btnDimCalcular").addEventListener("click", async (e) => {
@@ -580,7 +484,7 @@ function renderChecklistUI(local, sizingInputs){
           scheduleAutosave("fotos");
           showToast("📷 Foto adicionada.");
         }catch(e){
-          showToast("❌ Falha ao adicionar foto.");
+          showToast("[X] Falha ao adicionar foto.");
         }finally{
           fileInput.value = "";
         }
@@ -681,11 +585,7 @@ function readSizingInputsFromUI(){
     possuiCozinhaIndustrial: !!$("#dimCozinha")?.checked,
     possuiGLP: !!$("#dimGLP")?.checked,
     possuiPalcoEstrutura: !!$("#dimPalco")?.checked,
-    observacoesDim: $("#dimObs")?.value || "",
-    extintoresExistentes: (document.querySelector("#dimExtExist")?.value || ""),
-    possuiSinalizacaoAtual: !!document.querySelector("#dimSigOk")?.checked,
-    possuiIluminacaoAtual: !!document.querySelector("#dimIluOk")?.checked,
-    existObs: (document.querySelector("#dimExistObs")?.value || "")
+    observacoesDim: $("#dimObs")?.value || ""
   };
 }
 
@@ -699,7 +599,7 @@ async function saveSizingInputs(){
   v.sizing.inputs = readSizingInputsFromUI();
   v.updatedAt = Date.now();
 
-  setSaveHint("saving","Salvando automaticamente… (dimensionamento)");
+  setSaveHint("saving","Salvando automaticamente... (dimensionamento)");
   await dbPutVistoria(v);
   __lastSavedAt = v.updatedAt;
   setSaveHint("saved", `Salvo em ${formatDateTime(__lastSavedAt)}`);
@@ -726,7 +626,7 @@ async function computeSizingNow(local){
   // Pack adapter (este pacote base exporta computeSizing, mas no futuro cada pacote terá o seu)
   const pack = { PACK_INFO, computeSizing: packComputeSizing };
 
-  const sizing = runSizing({ context, pack });\n\n  // GAP automático: compara 'existe' x 'exigido'\n  sizing.gaps = computeGaps(sizing, inputs);\n  if (sizing.gaps.length){\n    sizing.results = [...sizing.gaps, ...(sizing.results || [])];\n  }
+  const sizing = runSizing({ context, pack });
 
   const v = await dbGetVistoria(currentVistoriaId);
   if (!v) return;
@@ -753,7 +653,7 @@ function renderSizingResult(sizing){
   box.style.display = "block";
   hint.textContent = `${sizing.pack?.name || "Pacote"} v${sizing.pack?.version || "?"}`;
 
-  const warnings = (sizing.warnings || []).map(w => `<div class="rep-item"><div class="rep-note">⚠️ ${escapeHtmlBr(w)}</div></div>`).join("");
+  const warnings = (sizing.warnings || []).map(w => `<div class="rep-item"><div class="rep-note">[!] ${escapeHtmlBr(w)}</div></div>`).join("");
 
   const results = (sizing.results || []).map(r => {
     const sev = r.severity || "info";
@@ -781,7 +681,7 @@ async function saveAllNow(silent=false){
   if (!currentVistoriaId) return;
 
   const v = await dbGetVistoria(currentVistoriaId);
-  if (!v){ showToast("⚠️ Vistoria não encontrada."); return; }
+  if (!v){ showToast("[!] Vistoria não encontrada."); return; }
 
   const now = Date.now();
   v.updatedAt = now;
@@ -801,10 +701,10 @@ async function saveAllNow(silent=false){
     await dbPutVistoria(v);
     __lastSavedAt = now;
     setSaveHint("saved", `Salvo em ${formatDateTime(now)}`);
-    if (!silent) showToast("✅ Salvo offline.");
+    if (!silent) showToast("[OK] Salvo offline.");
   }catch(e){
     setSaveHint("error", "Falha ao salvar (offline)");
-    if (!silent) showToast("❌ Falha ao salvar.");
+    if (!silent) showToast("[X] Falha ao salvar.");
   }
 
   } finally {
@@ -830,12 +730,12 @@ async function loadRelatorioView(id){
   setBusy(true, "Gerando relat\u00f3rio", "Montando impress\u00e3o\u2026");
   try{
   const v = await dbGetVistoria(id);
-  if (!v){ showToast("⚠️ Vistoria não encontrada."); toRoute("#/salvas"); return; }
+  if (!v){ showToast("[!] Vistoria não encontrada."); toRoute("#/salvas"); return; }
 
   currentVistoriaId = id;
 
   const local = v.local || {};
-  currentSections = __PACK.buildChecklist({ tipoLocal: local.tipoLocal, riscos: local.riscos || [] });
+  currentSections = buildChecklist({ tipoLocal: local.tipoLocal, riscos: local.riscos || [] });
   currentAnswers = (v.checklist && v.checklist.answers) ? structuredClone(v.checklist.answers) : {};
   for (const sec of currentSections) for (const it of sec.items) {
     if (!currentAnswers[it.id]) currentAnswers[it.id] = { status: "pendente", note: "", photos: [] };
@@ -863,7 +763,7 @@ async function loadRelatorioView(id){
         <h2>Relatório de Adequações para Regularização</h2>
         <div class="rep-sub">
           Bombeiro SP • ${escapeHtml(tipo)} • Gerado em ${escapeHtml(formatDateTime(Date.now()))}<br>
-          Pacote: ${escapeHtml(__PACK.info.name)} v${escapeHtml(__PACK.info.version)}
+          Pacote: ${escapeHtml(PACK_INFO.name)} v${escapeHtml(PACK_INFO.version)}
         </div>
       </div>
     </div>
@@ -931,7 +831,7 @@ async function loadRelatorioView(id){
       <h3>Dimensionamento e Recomendações (Pacote)</h3>
       <div class="rep-item">
         <div class="rep-note">
-          Pacote: ${escapeHtml(sizing?.pack?.name || __PACK.info.name)} v${escapeHtml(sizing?.pack?.version || __PACK.info.version)}<br>
+          Pacote: ${escapeHtml(sizing?.pack?.name || PACK_INFO.name)} v${escapeHtml(sizing?.pack?.version || PACK_INFO.version)}<br>
           Observação: o pacote base não contém valores normativos oficiais; ele gera recomendações orientativas e estrutura para o pacote oficial.
         </div>
       </div>
@@ -1056,7 +956,7 @@ async function handleRoute(){
 
   if (base.startsWith("#/checklist")){
     const id = params.id || currentVistoriaId || lastSavedId;
-    if (!id){ showToast("⚠️ Abra ou crie uma vistoria primeiro."); toRoute("#/salvas"); return; }
+    if (!id){ showToast("[!] Abra ou crie uma vistoria primeiro."); toRoute("#/salvas"); return; }
     setActiveView("#viewChecklist");
     await loadChecklistView(id);
     return;
@@ -1064,7 +964,7 @@ async function handleRoute(){
 
   if (base.startsWith("#/relatorio")){
     const id = params.id || currentVistoriaId || lastSavedId;
-    if (!id){ showToast("⚠️ Abra ou crie uma vistoria primeiro."); toRoute("#/salvas"); return; }
+    if (!id){ showToast("[!] Abra ou crie uma vistoria primeiro."); toRoute("#/salvas"); return; }
     setActiveView("#viewRelatorio");
     await loadRelatorioView(id);
     return;
@@ -1073,32 +973,6 @@ async function handleRoute(){
   setActiveView("#viewHome");
 }
 
-(async () => {
-  // Init pack selector
-  const sel = document.querySelector("#packSelect");
-  if (sel){
-    sel.value = getPackId();
-    sel.addEventListener("change", async () => {
-      setBusy(true, "Carregando pacote", "Aplicando normas...");
-      try{
-        await loadPack(sel.value);
-        showToast("✅ Pacote aplicado.");
-        // Recarrega a tela atual para refletir regras do pacote
-        await handleRoute();
-      } finally {
-        setBusy(false);
-      }
-    });
-  }
-
-  setBusy(true, "Iniciando", "Carregando pacote...");
-  try{
-    await loadPack(getPackId());
-  } finally {
-    setBusy(false);
-  }
-
-  window.addEventListener("hashchange", () => { handleRoute(); });
-  if (!location.hash) location.hash = "#/home";
-  await handleRoute();
-})();
+window.addEventListener("hashchange", () => { handleRoute(); });
+if (!location.hash) location.hash = "#/home";
+handleRoute();
