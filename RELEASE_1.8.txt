@@ -1,0 +1,6 @@
+BOMBEIRO 1.8 – Checklist Automático – 02/02/2026
+
+Novo:
+- Checklist gerado automaticamente por regras condicionais
+- Baseado em ocupação, área e riscos
+- Regras editáveis via arquivo JSON

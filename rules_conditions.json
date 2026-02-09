@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "name": "Regras de Checklist Automático",
+    "updatedAt": "2026-02-02",
+    "description": "Gera checklist automaticamente conforme ocupação, área, pavimentos e riscos."
+  },
+  "rules": [
+    {
+      "if": {
+        "ocupacao": "comercio"
+      },
+      "then": [
+        "Rotas de fuga desobstruídas",
+        "Sinalização de saída",
+        "Extintores visíveis e acessíveis"
+      ]
+    },
+    {
+      "if": {
+        "possuiCozinhaIndustrial": true
+      },
+      "then": [
+        "Extintor classe K",
+        "Sistema de exaustão com proteção",
+        "Treinamento específico da brigada"
+      ]
+    }
+  ]
+}
