@@ -1,0 +1,4 @@
+FIX3 – 02/02/2026
+- Corrige erro persistente por cache/service worker.
+- Adiciona cache-buster em scripts no index.html.
+- Atualiza sw.js: novo CACHE_NAME, skipWaiting, clients.claim e network-first para app.js.

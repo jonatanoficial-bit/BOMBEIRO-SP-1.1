@@ -1,5 +1,5 @@
 /* sw.js - Bombeiro SP (PWA Offline) */
-const CACHE_NAME = "bombeiro-sp-v8";
+const CACHE_NAME = "bombeiro-cache-20260202";
 const ASSETS = [
   "./",
   "./index.html",
@@ -48,3 +48,16 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
+
+async function networkFirst(request){
+  try{
+    const fresh = await fetch(request);
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, fresh.clone());
+    return fresh;
+  }catch(e){
+    const cached = await caches.match(request);
+    return cached || Response.error();
+  }
+}
