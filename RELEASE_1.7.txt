@@ -1,0 +1,6 @@
+BOMBEIRO 1.7 – GAP automático (SP + RJ) – 02/02/2026
+
+Novo: compare 'o que existe' x 'o que é exigido'.
+- Campo para extintores existentes
+- Checkboxes para sinalização e iluminação instaladas
+- Itens GAP aparecem no topo do dimensionamento e no relatório.

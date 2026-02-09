@@ -51,6 +51,75 @@ function setBusy(on, title="Processando…", sub="Aguarde"){
 }
 
 
+function toIntSafe(v){
+  const n = Math.trunc(Number(String(v ?? "").trim()));
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Gera itens de GAP (o que falta) comparando 'existe' vs 'exigido' */
+function computeGaps(sizing, inputs){
+  const gaps = [];
+  if (!sizing || !Array.isArray(sizing.results)) return gaps;
+  const existExt = toIntSafe(inputs?.extintoresExistentes);
+  const sigOk = !!inputs?.possuiSinalizacaoAtual;
+  const iluOk = !!inputs?.possuiIluminacaoAtual;
+
+  // Extintores: maior "value" dentro de Extintores
+  const extReq = sizing.results
+    .filter(r => (String(r.category||"").toLowerCase().includes("extint") || String(r.title||"").toLowerCase().includes("extint")) && r.value != null)
+    .map(r => Number(r.value))
+    .filter(n => Number.isFinite(n))
+    .sort((a,b)=>b-a)[0];
+
+  if (Number.isFinite(extReq)){
+    const req = Math.ceil(extReq);
+    const faltam = Math.max(0, req - existExt);
+    gaps.push({
+      id:"gap_ext",
+      category:"GAP",
+      title:"Extintores — o que falta",
+      summary: faltam>0 ? `Faltam ${faltam} extintor(es) (exigido ${req}, existente ${existExt}).` : `OK: existente (${existExt}) atende o mínimo estimado (${req}).`,
+      details: inputs?.existObs ? `Obs: ${inputs.existObs}` : "",
+      refs: [],
+      severity: faltam>0 ? "critical" : "info",
+      value: faltam,
+      unit: "un"
+    });
+  }
+
+  // Sinalização/Iluminação: se o pacote gerou recomendação, checar confirmação do usuário
+  const hasSig = sizing.results.some(r => String(r.title||"").toLowerCase().includes("sinaliza"));
+  const hasIlu = sizing.results.some(r => String(r.title||"").toLowerCase().includes("ilumina"));
+
+  if (hasSig){
+    gaps.push({
+      id:"gap_sig",
+      category:"GAP",
+      title:"Sinalização — status informado",
+      summary: sigOk ? "OK: sinalização indicada como instalada." : "ATENÇÃO: sinalização não confirmada. Verifique e regularize conforme o pacote.",
+      details: "",
+      refs: [],
+      severity: sigOk ? "info" : "warn"
+    });
+  }
+
+  if (hasIlu){
+    gaps.push({
+      id:"gap_ilu",
+      category:"GAP",
+      title:"Iluminação de emergência — status informado",
+      summary: iluOk ? "OK: iluminação indicada como instalada." : "ATENÇÃO: iluminação não confirmada. Verifique e regularize conforme o pacote.",
+      details: "",
+      refs: [],
+      severity: iluOk ? "info" : "warn"
+    });
+  }
+
+  return gaps;
+}
+
+
+
 function setActiveView(id){
   $all(".view").forEach(v => v.classList.remove("active"));
   const el = $(id);
@@ -612,7 +681,11 @@ function readSizingInputsFromUI(){
     possuiCozinhaIndustrial: !!$("#dimCozinha")?.checked,
     possuiGLP: !!$("#dimGLP")?.checked,
     possuiPalcoEstrutura: !!$("#dimPalco")?.checked,
-    observacoesDim: $("#dimObs")?.value || ""
+    observacoesDim: $("#dimObs")?.value || "",
+    extintoresExistentes: (document.querySelector("#dimExtExist")?.value || ""),
+    possuiSinalizacaoAtual: !!document.querySelector("#dimSigOk")?.checked,
+    possuiIluminacaoAtual: !!document.querySelector("#dimIluOk")?.checked,
+    existObs: (document.querySelector("#dimExistObs")?.value || "")
   };
 }
 
@@ -653,7 +726,7 @@ async function computeSizingNow(local){
   // Pack adapter (este pacote base exporta computeSizing, mas no futuro cada pacote terá o seu)
   const pack = { PACK_INFO, computeSizing: packComputeSizing };
 
-  const sizing = runSizing({ context, pack });
+  const sizing = runSizing({ context, pack });\n\n  // GAP automático: compara 'existe' x 'exigido'\n  sizing.gaps = computeGaps(sizing, inputs);\n  if (sizing.gaps.length){\n    sizing.results = [...sizing.gaps, ...(sizing.results || [])];\n  }
 
   const v = await dbGetVistoria(currentVistoriaId);
   if (!v) return;
