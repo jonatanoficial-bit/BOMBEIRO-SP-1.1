@@ -1,11 +1,8 @@
-VERSAO 1.2.0
-FASE 1 - REFATORACAO ESTRUTURAL
+VERSAO 1.4.0
+FASE 3 - MOTOR TECNICO AVANCADO
 
-- criacao da pasta src
-- inclusao de src/config/build.js
-- inclusao de src/main.js
-- copia modular inicial de db.js para src/core/db.js
-- copia modular inicial de rules_engine.js para src/rules/rules_engine.js
-- copia modular inicial de rules_sp_base.js para src/rules/rules_sp_base.js
-- build visivel na tela inicial e no rodape
-- arquivos BUILD.txt e src/docs/PHASE1.md adicionados
+- dashboard tecnico de risco e prontidao na home
+- motor de dimensionamento ampliado com score de risco, prontidao e prioridade
+- estimativa operacional minima para equipe em comercio e eventos
+- resultados tecnicos com badges, metricas e plano de acao
+- build atualizada em toda a interface

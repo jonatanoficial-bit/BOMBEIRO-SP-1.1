@@ -1,5 +1,5 @@
 Projeto: BombeiroSP
-Versao: 1.2.0
-Fase: 1
-Build: 2026-03-12 10:18
-Progresso: 38%
+Versao: 1.4.0
+Fase: 3
+Build: 2026-03-12 10:35
+Progresso: 52%

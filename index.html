@@ -43,38 +43,77 @@
 
     <!-- VIEW: HOME -->
     <section class="view" id="viewHome">
-      <section class="hero">
-        <img class="hero-cover" src="./cover.svg" alt="Capa Bombeiro SP">
-        <div class="hero-body">
-          <h2>Vistoria rápida, relatório profissional</h2>
+      <section class="hero hero-premium">
+        <div class="hero-visual-wrap">
+          <img class="hero-cover" src="./cover.svg" alt="Capa Bombeiro SP">
+          <div class="hero-overlay"></div>
+          <div class="hero-stats">
+            <div class="stat-chip"><span>Offline</span><strong>Pronto para campo</strong></div>
+            <div class="stat-chip"><span>Relatórios</span><strong>PDF técnico</strong></div>
+            <div class="stat-chip"><span>Mercado</span><strong>Comércio + Eventos</strong></div>
+          </div>
+        </div>
+        <div class="hero-body hero-body-premium">
+          <div class="eyebrow">FASE 3 · MOTOR TECNICO AVANCADO</div>
+          <h2>Pré-vistoria com leitura tecnica, prioridade e equipe minima</h2>
           <p>
-            Checklists inteligentes para comércio e eventos, com pendências, fotos e geração de PDF técnico
-            (adequações para regularização).
+            Motor tecnico ampliado com score de risco, prontidao operacional e estimativa minima de equipe para comercio e eventos.
           </p>
 
-          <div class="row" style="margin-top:14px;">
-            <button class="btn" id="btnNova">Nova vistoria</button>
-            <button class="btn btn-secondary" id="btnSalvas">Vistorias salvas</button>
+          <div class="hero-actions" style="margin-top:16px;">
+            <button class="btn btn-primary btn-lg" id="btnNova">✦ Nova vistoria</button>
+            <button class="btn btn-secondary btn-lg" id="btnSalvas">◷ Vistorias salvas</button>
+            <button class="btn btn-amber btn-lg" id="btnPacote">▣ Pacote SP</button>
           </div>
 
-          <div class="row" style="margin-top:10px;">
-            <button class="btn btn-amber" id="btnPacote">📦 Pacote SP</button>
+          <div class="feature-grid" style="margin-top:16px;">
+            <article class="feature-card">
+              <div class="feature-icon">🧯</div>
+              <h3>Painel tecnico</h3>
+              <p>Score, prioridade e equipe minima para orientar a tomada de decisao.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">⚡</div>
+              <h3>Motor expandido</h3>
+              <p>Mais inteligencia para pre-vistoria, brigada e planejamento operacional.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">📊</div>
+              <h3>Base comercial</h3>
+              <p>Base pronta para vender como app tecnico e expandir com modulos futuros.</p>
+            </article>
           </div>
 
-          <div class="note" style="margin-top:14px;">
+          <div class="note premium-note" style="margin-top:14px;">
             <b>Importante:</b> o app gera documento de adequações para o contratante. Procedimentos oficiais seguem o CBPMESP.
           </div>
           <div class="build-panel" aria-label="Informacoes da build">
             <div class="build-kicker">BUILD ATIVA</div>
-            <div class="build-version">v1.2.0 · Fase 1</div>
-            <div class="build-meta">Build 2026-03-12 10:18 · Progresso do projeto 38%</div>
+            <div class="build-version">v1.4.0 · Fase 3</div>
+            <div class="build-meta">Build 2026-03-12 10:35 · Progresso do projeto 52%</div>
           </div>
         </div>
       </section>
 
-      <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br>
-        <span class="build-inline">Build 2026-03-12 10:18 · v1.2.0 · Projeto 38%</span>
+      <section class="card section-shell">
+        <div class="section-shell-head">
+          <div>
+            <div class="eyebrow">MOTOR TECNICO</div>
+            <h3>Pilares da nova inteligencia</h3>
+          </div>
+          <div class="mini-badge">Tecnico comercial</div>
+        </div>
+        <div class="pillars-grid">
+          <div class="pillar-item"><strong>Score de risco</strong><span>Triagem rapida da criticidade da vistoria.</span></div>
+          <div class="pillar-item"><strong>Prontidao</strong><span>Confianca operacional baseada na completude dos dados.</span></div>
+          <div class="pillar-item"><strong>Equipe minima</strong><span>Estimativa inicial para comercio e eventos.</span></div>
+          <div class="pillar-item"><strong>Plano de acao</strong><span>Pendencias priorizadas para reparo e venda do servico.</span></div>
+        </div>
+      </section>
+
+      <div class="footer footer-premium">
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span><br>
+        <span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
       </div>
     </section>
 
@@ -181,7 +220,7 @@
       </form>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
       </div>
     </section>
 
@@ -201,7 +240,7 @@
       <div class="list" id="listaVistorias"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
       </div>
     </section>
 
@@ -256,7 +295,7 @@
       <div id="chkContent"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
       </div>
     </section>
 
@@ -276,7 +315,7 @@
       <div class="report" id="reportBox"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
       </div>
     </section>
 

@@ -396,6 +396,7 @@ function renderChecklistUI(local, sizingInputs){
 
       <div class="field" id="dimResultadoBox" style="display:none;">
         <div class="label"><span>Resultado do pacote</span><span class="hint" id="dimHint"></span></div>
+        <div class="tech-summary" id="techSummary"></div>
         <div id="dimResultados"></div>
       </div>
     </div>
@@ -644,14 +645,45 @@ async function computeSizingNow(local){
   }
 }
 
+function getSizingMetricValue(sizing, id){
+  const item = (sizing?.results || []).find(r => r.id === id);
+  return item?.value ?? null;
+}
+
 function renderSizingResult(sizing){
   const box = $("#dimResultadoBox");
   const hint = $("#dimHint");
   const wrap = $("#dimResultados");
+  const summary = $("#techSummary");
   if (!box || !wrap || !hint) return;
 
   box.style.display = "block";
   hint.textContent = `${sizing.pack?.name || "Pacote"} v${sizing.pack?.version || "?"}`;
+
+  const risk = getSizingMetricValue(sizing, "metric_risk_score");
+  const readiness = getSizingMetricValue(sizing, "metric_readiness");
+  const team = getSizingMetricValue(sizing, "metric_team");
+  const priorityItem = (sizing.results || []).find(r => r.id === "metric_priority");
+  if (summary) {
+    summary.innerHTML = `
+      <div class="tech-metric ${risk >= 70 ? "is-critical" : (risk >= 40 ? "is-warn" : "")}">
+        <span>Score de risco</span>
+        <strong>${risk ?? "-"}<small>/100</small></strong>
+      </div>
+      <div class="tech-metric ${readiness < 60 ? "is-critical" : (readiness < 80 ? "is-warn" : "")}">
+        <span>Prontidao</span>
+        <strong>${readiness ?? "-"}<small>/100</small></strong>
+      </div>
+      <div class="tech-metric ${team >= 6 ? "is-critical" : (team >= 3 ? "is-warn" : "")}">
+        <span>Equipe minima</span>
+        <strong>${team ?? "-"}<small> prof.</small></strong>
+      </div>
+      <div class="tech-metric ${priorityItem?.severity === "critical" ? "is-critical" : (priorityItem?.severity === "warn" ? "is-warn" : "")}">
+        <span>Prioridade</span>
+        <strong>${escapeHtml(priorityItem?.summary?.replace("Prioridade ", "").replace(".", "") || "-")}</strong>
+      </div>
+    `;
+  }
 
   const warnings = (sizing.warnings || []).map(w => `<div class="rep-item"><div class="rep-note">[!] ${escapeHtmlBr(w)}</div></div>`).join("");
 
@@ -659,11 +691,13 @@ function renderSizingResult(sizing){
     const sev = r.severity || "info";
     const badgeClass = sev === "critical" ? "bad" : (sev === "warn" ? "warn" : "na");
     const refs = (r.refs || []).filter(x => x.code).map(x => `• ${x.code}${x.note ? " — " + x.note : ""}`).join("\n");
+    const value = (r.value !== null && r.value !== undefined && r.value !== "") ? `<div class="metric-inline">${escapeHtml(String(r.value))}${r.unit ? `<small>${escapeHtml(r.unit)}</small>` : ""}</div>` : "";
 
     return `
       <div class="rep-item">
         <h4>${escapeHtml(r.category)} — ${escapeHtml(r.title)}</h4>
         <div class="rep-badge ${badgeClass}">${sev.toUpperCase()}</div>
+        ${value}
         ${r.summary ? `<div class="rep-note">${escapeHtml(r.summary)}</div>` : ""}
         ${r.details ? `<div class="rep-note">${escapeHtml(r.details)}</div>` : ""}
         ${refs ? `<div class="rep-note">${escapeHtmlBr(refs)}</div>` : ""}
@@ -671,7 +705,7 @@ function renderSizingResult(sizing){
     `;
   }).join("");
 
-  wrap.innerHTML = warnings + results || `<div class="rep-item"><div class="rep-note">Sem resultados.</div></div>`;
+  wrap.innerHTML = (warnings + results) || `<div class="rep-item"><div class="rep-note">Sem resultados.</div></div>`;
 }
 
 /* ===== Persistência geral ===== */
