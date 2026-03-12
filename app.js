@@ -6,6 +6,8 @@ import { runSizing } from "./rules_engine.js";
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 
+const BUILD_META = { version: '1.9.0', phase: '8', build: '2026-03-12 12:38', progress: '82%' };
+
 function showToast(msg){
   const el = $("#toast");
   $("#toastText").textContent = msg;
@@ -89,6 +91,36 @@ function routeBase(){
   const h = location.hash || "#/home";
   const qIdx = h.indexOf("?");
   return qIdx < 0 ? h : h.slice(0, qIdx);
+}
+
+function dismissIntro(){
+  const splash = document.querySelector('#introSplash');
+  if (!splash) return;
+  splash.classList.add('is-hidden');
+  document.body.classList.remove('app-booting');
+  setTimeout(() => splash.remove(), 500);
+}
+
+function initIntroExperience(){
+  const splash = document.querySelector('#introSplash');
+  const video = document.querySelector('#introVideo');
+  const skip = document.querySelector('#btnSkipIntro');
+  if (!splash || !video) {
+    document.body.classList.remove('app-booting');
+    return;
+  }
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    dismissIntro();
+  };
+  skip?.addEventListener('click', finish);
+  video.addEventListener('ended', finish, { once:true });
+  video.addEventListener('error', finish, { once:true });
+  setTimeout(finish, 9000);
+  const playPromise = video.play?.();
+  if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
 }
 
 /* ===== PWA ===== */
@@ -586,7 +618,8 @@ function readSizingInputsFromUI(){
     possuiCozinhaIndustrial: !!$("#dimCozinha")?.checked,
     possuiGLP: !!$("#dimGLP")?.checked,
     possuiPalcoEstrutura: !!$("#dimPalco")?.checked,
-    observacoesDim: $("#dimObs")?.value || ""
+    observacoesDim: $("#dimObs")?.value || "",
+    videoIntroResolution: '560x560'
   };
 }
 
@@ -663,23 +696,40 @@ function renderSizingResult(sizing){
   const risk = getSizingMetricValue(sizing, "metric_risk_score");
   const readiness = getSizingMetricValue(sizing, "metric_readiness");
   const team = getSizingMetricValue(sizing, "metric_team");
+  const compliance = getSizingMetricValue(sizing, "metric_compliance_forecast");
+  const complexity = getSizingMetricValue(sizing, "metric_complexity");
+  const response = getSizingMetricValue(sizing, "metric_response_level");
   const priorityItem = (sizing.results || []).find(r => r.id === "metric_priority");
   if (summary) {
+    summary.classList.add('is-pro');
     summary.innerHTML = `
+      <div style="grid-column:1/-1" class="tech-summary-title">Dashboard técnico avançado</div>
       <div class="tech-metric ${risk >= 70 ? "is-critical" : (risk >= 40 ? "is-warn" : "")}">
         <span>Score de risco</span>
         <strong>${risk ?? "-"}<small>/100</small></strong>
       </div>
       <div class="tech-metric ${readiness < 60 ? "is-critical" : (readiness < 80 ? "is-warn" : "")}">
-        <span>Prontidao</span>
+        <span>Prontidão</span>
         <strong>${readiness ?? "-"}<small>/100</small></strong>
       </div>
       <div class="tech-metric ${team >= 6 ? "is-critical" : (team >= 3 ? "is-warn" : "")}">
-        <span>Equipe minima</span>
+        <span>Equipe mínima</span>
         <strong>${team ?? "-"}<small> prof.</small></strong>
       </div>
-      <div class="tech-metric ${priorityItem?.severity === "critical" ? "is-critical" : (priorityItem?.severity === "warn" ? "is-warn" : "")}">
-        <span>Prioridade</span>
+      <div class="tech-metric ${compliance < 55 ? "is-critical" : (compliance < 75 ? "is-warn" : "")}">
+        <span>Previsão de conformidade</span>
+        <strong>${compliance ?? "-"}<small>/100</small></strong>
+      </div>
+      <div class="tech-metric ${complexity >= 70 ? "is-critical" : (complexity >= 40 ? "is-warn" : "")}">
+        <span>Complexidade operacional</span>
+        <strong>${complexity ?? "-"}<small>/100</small></strong>
+      </div>
+      <div class="tech-metric ${response >= 3 ? "is-critical" : (response >= 2 ? "is-warn" : "")}">
+        <span>Nível de resposta</span>
+        <strong>${response === 4 ? "Máximo" : response === 3 ? "Alto" : response === 2 ? "Moderado" : "Base"}</strong>
+      </div>
+      <div class="tech-metric ${priorityItem?.severity === "critical" ? "is-critical" : (priorityItem?.severity === "warn" ? "is-warn" : "")}" style="grid-column:1/-1">
+        <span>Prioridade global</span>
         <strong>${escapeHtml(priorityItem?.summary?.replace("Prioridade ", "").replace(".", "") || "-")}</strong>
       </div>
     `;
@@ -1009,4 +1059,5 @@ async function handleRoute(){
 
 window.addEventListener("hashchange", () => { handleRoute(); });
 if (!location.hash) location.hash = "#/home";
+initIntroExperience();
 handleRoute();

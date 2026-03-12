@@ -258,6 +258,59 @@ export function computeSizing(context) {
   if (lot === null || lot === undefined) warnings.push("Lotacao nao informada: estimativa de equipe e controle de publico ficam limitados.");
   if (!context.horarioFuncionamento) warnings.push("Horario de funcionamento nao informado: cobertura por turno pode ficar subdimensionada.");
 
+const complexity = Math.min(100, Math.round((riskScore * 0.55) + ((pav || 1) * 6) + ((area >= 1000) ? 12 : area >= 500 ? 6 : 0) + ((context.tipoLocal === "evento") ? 12 : 4)));
+const complianceForecast = Math.max(18, Math.min(98, Math.round((readiness * 0.58) + (100 - riskScore) * 0.42)));
+const responseLevel = riskScore >= 78 ? 4 : riskScore >= 58 ? 3 : riskScore >= 34 ? 2 : 1;
+const commercialMaturity = Math.max(30, Math.min(96, Math.round((readiness * 0.5) + (complianceForecast * 0.3) + ((100 - complexity) * 0.2))));
+
+results.push({
+  id: "metric_complexity",
+  category: "Painel Tecnico",
+  title: "Complexidade operacional",
+  summary: `Complexidade estimada: ${complexity}/100`,
+  details: "Combina risco, tipologia, area e distribuicao operacional para orientar equipe, narrativa de relatorio e venda tecnica.",
+  refs: [{ code: "PACOTE SP (BASE)", note: "Indice interno orientativo para operacao e escopo." }],
+  severity: complexity >= 70 ? "critical" : (complexity >= 40 ? "warn" : "info"),
+  value: complexity,
+  unit: "/100"
+});
+
+results.push({
+  id: "metric_compliance_forecast",
+  category: "Painel Tecnico",
+  title: "Previsao de conformidade",
+  summary: `Chance orientativa de conformidade inicial: ${complianceForecast}/100`,
+  details: "Leitura comercial para pre-vistoria, combinando dados preenchidos e nivel de risco. Nao substitui validacao oficial.",
+  refs: [{ code: "PACOTE SP (BASE)", note: "Indice interno de previsao comercial." }],
+  severity: complianceForecast < 55 ? "critical" : (complianceForecast < 75 ? "warn" : "info"),
+  value: complianceForecast,
+  unit: "/100"
+});
+
+results.push({
+  id: "metric_response_level",
+  category: "Operacao",
+  title: "Nivel de resposta sugerido",
+  summary: responseLevel === 4 ? "Resposta maxima sugerida." : responseLevel === 3 ? "Resposta alta sugerida." : responseLevel === 2 ? "Resposta moderada sugerida." : "Resposta base sugerida.",
+  details: "Classificacao interna para apoiar cobertura operacional, distribuicao de equipe e argumentacao tecnica com cliente.",
+  refs: [{ code: "PACOTE SP (BASE)", note: "Classificacao interna por faixa de risco." }],
+  severity: responseLevel >= 3 ? "critical" : (responseLevel === 2 ? "warn" : "info"),
+  value: responseLevel,
+  unit: "nivel"
+});
+
+results.push({
+  id: "metric_commercial_maturity",
+  category: "Produto",
+  title: "Maturidade comercial da vistoria",
+  summary: `Maturidade estimada: ${commercialMaturity}/100`,
+  details: "Ajuda a entender se a vistoria ja possui narrativa, dados e consistencia suficientes para uma entrega comercial mais forte.",
+  refs: [{ code: "PACOTE SP (BASE)", note: "Indice interno de produto e entrega." }],
+  severity: commercialMaturity < 55 ? "warn" : "info",
+  value: commercialMaturity,
+  unit: "/100"
+});
+
   return { results, warnings };
 }
 

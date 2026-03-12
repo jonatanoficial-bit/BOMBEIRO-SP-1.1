@@ -1034,3 +1034,50 @@ body::before{
   opacity:.76;
   margin-bottom:3px;
 }
+
+/* ===== FASE 8 - Intro Video + Dashboard Profissional ===== */
+body.app-booting{overflow:hidden;}
+.intro-splash{
+  position:fixed; inset:0; z-index:9999; background:#050505; display:flex; align-items:center; justify-content:center;
+}
+.intro-splash.is-hidden{opacity:0; pointer-events:none; transition:opacity .45s ease;}
+.intro-video{
+  width:100vw; height:100dvh; object-fit:cover; background:#000;
+}
+.intro-overlay-ui{
+  position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:18px; 
+  background:linear-gradient(180deg, rgba(0,0,0,.58), rgba(0,0,0,.15) 35%, rgba(0,0,0,.7));
+}
+.intro-brand-pill{
+  align-self:flex-start; background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.15); color:#fff; 
+  padding:10px 14px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.04em; backdrop-filter:blur(12px);
+}
+.intro-copy{max-width:620px; color:#fff;}
+.intro-kicker{display:inline-block; font-size:12px; font-weight:800; letter-spacing:.16em; color:#ffcf66; margin-bottom:8px;}
+.intro-copy h2{font-size:clamp(26px, 6vw, 46px); line-height:1.02; margin:0 0 10px;}
+.intro-copy p{max-width:520px; color:rgba(255,255,255,.82); margin:0;}
+.intro-skip{align-self:flex-end; min-width:170px;}
+.dashboard-pro-shell{margin-top:16px;}
+.dashboard-pro-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:14px;}
+.dash-pro-card{border:1px solid rgba(255,255,255,.08); background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)); border-radius:20px; padding:16px; box-shadow:0 16px 40px rgba(0,0,0,.22);}
+.dash-pro-card.hot{background:linear-gradient(135deg, rgba(196,0,0,.38), rgba(255,170,0,.18)); border-color:rgba(255,180,0,.3);}
+.dash-pro-card span{display:block; color:var(--muted,#d2d2d2); font-size:12px; text-transform:uppercase; letter-spacing:.08em;}
+.dash-pro-card strong{display:block; font-size:24px; margin-top:10px;}
+.dash-pro-card small{display:block; margin-top:6px; color:rgba(255,255,255,.72);}
+.dashboard-pro-band{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:12px;}
+.band-item{padding:12px 14px; border-radius:16px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.06);}
+.band-item b{display:block; font-size:14px;}
+.band-item span{display:block; margin-top:4px; font-size:12px; color:rgba(255,255,255,.75);}
+.tech-summary.is-pro{grid-template-columns:repeat(3,minmax(0,1fr));}
+.tech-summary-title{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#ffcf66; margin-bottom:10px; font-weight:800;}
+@media (max-width: 768px){
+  .intro-copy h2{font-size:30px;}
+  .intro-overlay-ui{padding:14px;}
+  .dashboard-pro-grid, .dashboard-pro-band, .tech-summary.is-pro{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media (max-width: 520px){
+  .intro-video{object-fit:cover;}
+  .intro-copy{max-width:none;}
+  .intro-skip{align-self:stretch;}
+  .dashboard-pro-grid, .dashboard-pro-band, .tech-summary.is-pro{grid-template-columns:1fr;}
+}

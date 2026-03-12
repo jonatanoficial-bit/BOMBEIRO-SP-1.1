@@ -1,0 +1,8 @@
+VERSÃO 1.9.0
+Build: 2026-03-12 12:38
+Progresso: 82%
+
+- splash em vídeo automático
+- dashboard profissional
+- cálculo técnico avançado
+- aparência comercial mais forte

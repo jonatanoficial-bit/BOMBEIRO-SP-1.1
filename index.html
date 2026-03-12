@@ -17,7 +17,22 @@
 
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body>
+<body class="app-booting">
+<div class="intro-splash" id="introSplash" aria-label="Introdução do aplicativo">
+  <video class="intro-video" id="introVideo" autoplay muted playsinline preload="auto" poster="./cover.svg">
+    <source src="./assets/intro.mp4" type="video/mp4">
+  </video>
+  <div class="intro-overlay-ui">
+    <div class="intro-brand-pill">BombeiroSP · Build 2026-03-12 12:38</div>
+    <div class="intro-copy">
+      <span class="intro-kicker">ABERTURA OFICIAL</span>
+      <h2>Pré-vistoria profissional com entrada premium em vídeo</h2>
+      <p>Vídeo otimizado para celular, reprodução automática e transição direta para o aplicativo.</p>
+    </div>
+    <button class="btn btn-secondary intro-skip" id="btnSkipIntro">Pular introdução</button>
+  </div>
+</div>
+
 
   <!-- Topbar -->
   <header class="topbar">
@@ -54,10 +69,10 @@
           </div>
         </div>
         <div class="hero-body hero-body-premium">
-          <div class="eyebrow">FASE 3 · MOTOR TECNICO AVANCADO</div>
-          <h2>Pré-vistoria com leitura tecnica, prioridade e equipe minima</h2>
+          <div class="eyebrow">FASE 8 · DASHBOARD PROFISSIONAL + CALCULO TECNICO AVANCADO</div>
+          <h2>Dashboard profissional, vídeo de abertura e cálculo técnico mais avançado</h2>
           <p>
-            Motor tecnico ampliado com score de risco, prontidao operacional e estimativa minima de equipe para comercio e eventos.
+            Experiência premium com splash em vídeo, painel executivo e métricas avançadas para comércio, eventos e operação em campo.
           </p>
 
           <div class="hero-actions" style="margin-top:16px;">
@@ -69,18 +84,18 @@
           <div class="feature-grid" style="margin-top:16px;">
             <article class="feature-card">
               <div class="feature-icon">🧯</div>
-              <h3>Painel tecnico</h3>
-              <p>Score, prioridade e equipe minima para orientar a tomada de decisao.</p>
+              <h3>Dashboard executivo</h3>
+              <p>Indicadores visuais mais fortes para convencer cliente e orientar a operação.</p>
             </article>
             <article class="feature-card">
               <div class="feature-icon">⚡</div>
-              <h3>Motor expandido</h3>
-              <p>Mais inteligencia para pre-vistoria, brigada e planejamento operacional.</p>
+              <h3>Cálculo avançado</h3>
+              <p>Mais profundidade técnica com novas métricas, previsão e nível de resposta.</p>
             </article>
             <article class="feature-card">
               <div class="feature-icon">📊</div>
-              <h3>Base comercial</h3>
-              <p>Base pronta para vender como app tecnico e expandir com modulos futuros.</p>
+              <h3>Produto comercial</h3>
+              <p>Aparência premium preparada para GitHub, Vercel e expansão modular.</p>
             </article>
           </div>
 
@@ -89,8 +104,8 @@
           </div>
           <div class="build-panel" aria-label="Informacoes da build">
             <div class="build-kicker">BUILD ATIVA</div>
-            <div class="build-version">v1.4.0 · Fase 3</div>
-            <div class="build-meta">Build 2026-03-12 10:35 · Progresso do projeto 52%</div>
+            <div class="build-version">v1.9.0 · Fase 8</div>
+            <div class="build-meta">Build 2026-03-12 12:38 · Progresso do projeto 82%</div>
           </div>
         </div>
       </section>
@@ -98,22 +113,59 @@
       <section class="card section-shell">
         <div class="section-shell-head">
           <div>
-            <div class="eyebrow">MOTOR TECNICO</div>
-            <h3>Pilares da nova inteligencia</h3>
+            <div class="eyebrow">DASHBOARD PROFISSIONAL</div>
+            <h3>Pilares do produto comercial forte</h3>
           </div>
-          <div class="mini-badge">Tecnico comercial</div>
+          <div class="mini-badge">Release premium</div>
         </div>
         <div class="pillars-grid">
-          <div class="pillar-item"><strong>Score de risco</strong><span>Triagem rapida da criticidade da vistoria.</span></div>
-          <div class="pillar-item"><strong>Prontidao</strong><span>Confianca operacional baseada na completude dos dados.</span></div>
-          <div class="pillar-item"><strong>Equipe minima</strong><span>Estimativa inicial para comercio e eventos.</span></div>
-          <div class="pillar-item"><strong>Plano de acao</strong><span>Pendencias priorizadas para reparo e venda do servico.</span></div>
+          <div class="pillar-item"><strong>Vídeo splash</strong><span>Abertura automática com transição elegante para o app.</span></div>
+          <div class="pillar-item"><strong>Dashboard</strong><span>Leitura executiva com visual forte e mais confiança comercial.</span></div>
+          <div class="pillar-item"><strong>Cálculo avançado</strong><span>Risco, conformidade, complexidade e nível de resposta.</span></div>
+          <div class="pillar-item"><strong>Escala comercial</strong><span>Mais valor para venda, operação e expansão futura do produto.</span></div>
         </div>
       </section>
 
+      <section class="card section-shell dashboard-pro-shell">
+        <div class="section-shell-head">
+          <div>
+            <div class="eyebrow">DASHBOARD EXECUTIVO</div>
+            <h3>Painel profissional do produto</h3>
+          </div>
+          <div class="mini-badge">v1.9.0</div>
+        </div>
+        <div class="dashboard-pro-grid">
+          <article class="dash-pro-card hot">
+            <span>Produto</span>
+            <strong>82%</strong>
+            <small>Maturidade atual do projeto</small>
+          </article>
+          <article class="dash-pro-card">
+            <span>Operação</span>
+            <strong>Comércio + Eventos</strong>
+            <small>Pré-vistoria, equipe e risco</small>
+          </article>
+          <article class="dash-pro-card">
+            <span>Entrega</span>
+            <strong>GitHub + Vercel</strong>
+            <small>PWA pronto para publicação</small>
+          </article>
+          <article class="dash-pro-card">
+            <span>Experiência</span>
+            <strong>Intro em vídeo</strong>
+            <small>Entrada premium com autoplay</small>
+          </article>
+        </div>
+        <div class="dashboard-pro-band">
+          <div class="band-item"><b>Risco</b><span>Leitura técnica mais profunda</span></div>
+          <div class="band-item"><b>Conformidade</b><span>Previsão orientativa para pré-vistoria</span></div>
+          <div class="band-item"><b>Resposta</b><span>Nível operacional sugerido</span></div>
+          <div class="band-item"><b>Valor</b><span>Base comercial mais forte</span></div>
+        </div>
+
       <div class="footer footer-premium">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span><br>
-        <span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span><br>
+        <span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
       </div>
     </section>
 
@@ -220,7 +272,7 @@
       </form>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
       </div>
     </section>
 
@@ -240,7 +292,7 @@
       <div class="list" id="listaVistorias"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
       </div>
     </section>
 
@@ -295,7 +347,7 @@
       <div id="chkContent"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
       </div>
     </section>
 
@@ -315,7 +367,7 @@
       <div class="report" id="reportBox"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 10:35 · v1.4.0 · Projeto 52%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
       </div>
     </section>
 
