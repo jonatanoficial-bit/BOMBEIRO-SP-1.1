@@ -1,8 +1,4 @@
-VERSÃO 2.0.0
-
-Fase 9 — Estrutura Comercial e Modo Cliente
-- cadastro de cliente, projeto, responsável técnico e contato
-- central comercial na home
-- contadores executivos de clientes, projetos e responsáveis
-- listagem de clientes recentes
-- atualização visual da build e posicionamento comercial mais forte
+VERSAO 2.2.0
+- splash video automatico
+- dashboard profissional
+- base modular eventos/tst

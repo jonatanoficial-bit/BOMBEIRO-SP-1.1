@@ -1,5 +1,5 @@
 Projeto: BombeiroSP
-Versão: 2.0.0
-Build: 2026-03-12 13:05
-Fase: 9
-Progresso: 87%
+Versão: 2.2.0
+Build: 2026-03-12 20:18
+Fases: Splash video + Dashboard + módulos
+Progresso: 96%
