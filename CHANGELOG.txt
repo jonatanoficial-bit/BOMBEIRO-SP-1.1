@@ -1,0 +1,11 @@
+VERSAO 1.2.0
+FASE 1 - REFATORACAO ESTRUTURAL
+
+- criacao da pasta src
+- inclusao de src/config/build.js
+- inclusao de src/main.js
+- copia modular inicial de db.js para src/core/db.js
+- copia modular inicial de rules_engine.js para src/rules/rules_engine.js
+- copia modular inicial de rules_sp_base.js para src/rules/rules_sp_base.js
+- build visivel na tela inicial e no rodape
+- arquivos BUILD.txt e src/docs/PHASE1.md adicionados
