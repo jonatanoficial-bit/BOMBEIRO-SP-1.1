@@ -1,8 +1,11 @@
-VERSAO 1.4.0
-FASE 3 - MOTOR TECNICO AVANCADO
+VERSÃO 1.7.0
 
-- dashboard tecnico de risco e prontidao na home
-- motor de dimensionamento ampliado com score de risco, prontidao e prioridade
-- estimativa operacional minima para equipe em comercio e eventos
-- resultados tecnicos com badges, metricas e plano de acao
-- build atualizada em toda a interface
+Fase 5 — Modo Evento Profissional
+- cálculo automático de brigadistas
+- checklist de eventos
+- classificação de risco
+
+Fase 6 — Sistema de Clientes e Projetos
+- estrutura inicial para cadastro de clientes
+- estrutura para locais
+- preparação para histórico de inspeções
