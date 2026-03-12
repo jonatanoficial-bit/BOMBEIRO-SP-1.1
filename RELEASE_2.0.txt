@@ -1,0 +1,4 @@
+BombeiroSP v2.0.0
+Build: 2026-03-12 13:05
+Fase 9 - Estrutura Comercial e Modo Cliente
+Progresso: 87%

@@ -1081,3 +1081,19 @@ body.app-booting{overflow:hidden;}
   .intro-skip{align-self:stretch;}
   .dashboard-pro-grid, .dashboard-pro-band, .tech-summary.is-pro{grid-template-columns:1fr;}
 }
+
+
+.inline-card{ margin-top: 2px; }
+.item-sub{ display:block; margin-top:4px; color: rgba(255,255,255,.74); }
+.commercial-shell{ margin-top: 14px; }
+.commercial-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:12px; }
+.commercial-card{ border-radius: 18px; padding: 16px; border:1px solid rgba(255,255,255,.12); background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)); box-shadow: var(--shadow2); }
+.commercial-card span{ display:block; font-size:12px; color: rgba(255,255,255,.72); text-transform: uppercase; letter-spacing:.08em; margin-bottom:6px; }
+.commercial-card strong{ display:block; font-size:22px; font-weight:900; }
+.commercial-card small{ display:block; margin-top:6px; color: rgba(255,255,255,.72); line-height:1.4; }
+.client-hub-list{ display:grid; gap:10px; margin-top:14px; }
+.client-hub-card{ display:flex; justify-content:space-between; gap:12px; align-items:center; padding:14px 16px; border-radius:16px; background: rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.12); }
+.client-hub-card strong{ display:block; font-size:15px; }
+.client-hub-card small,.client-meta span,.client-empty{ color: rgba(255,255,255,.72); }
+.client-meta{ text-align:right; font-size:12px; }
+@media (max-width: 680px){ .commercial-grid{ grid-template-columns: 1fr; } .client-hub-card{ flex-direction:column; align-items:flex-start; } .client-meta{ text-align:left; } }

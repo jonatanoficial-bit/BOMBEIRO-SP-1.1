@@ -6,7 +6,7 @@ import { runSizing } from "./rules_engine.js";
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 
-const BUILD_META = { version: '1.9.0', phase: '8', build: '2026-03-12 12:38', progress: '82%' };
+const BUILD_META = { version: '2.0.0', phase: '9', build: '2026-03-12 13:05', progress: '87%' };
 
 function showToast(msg){
   const el = $("#toast");
@@ -203,6 +203,10 @@ $("#formNova").addEventListener("submit", async (e) => {
   const tipoLocal = $("#tipoLocal").value.trim();
   const nomeLocal = $("#nomeLocal").value.trim();
   const endereco = $("#endereco").value.trim();
+  const clienteEmpresa = $("#clienteEmpresa")?.value.trim() || "";
+  const projetoNome = $("#projetoNome")?.value.trim() || "";
+  const responsavelTecnico = $("#responsavelTecnico")?.value.trim() || "";
+  const contatoWhatsapp = $("#contatoWhatsapp")?.value.trim() || "";
   const area = parseNumberSafe($("#area").value);
   const pavimentos = parseNumberSafe($("#pavimentos").value);
   const altura = parseNumberSafe($("#altura").value);
@@ -225,6 +229,7 @@ $("#formNova").addEventListener("submit", async (e) => {
     updatedAt: now,
     status: "rascunho",
     local: { tipoLocal, nomeLocal, endereco, area_m2: area, pavimentos, altura_m: altura, lotacao, riscos, obs },
+    commercial: { clienteEmpresa, projetoNome, responsavelTecnico, contatoWhatsapp },
     checklist: { pack: PACK_INFO, answers: {}, lastSavedAt: now },
     sizing: { pack: PACK_INFO, inputs: {}, results: [], warnings: [], computedAt: now },
     relatorio: null
@@ -267,6 +272,8 @@ async function renderLista(){
     const area = v?.local?.area_m2 ?? "-";
     const pav = v?.local?.pavimentos ?? "-";
     const when = formatDateTime(v.updatedAt);
+    const cliente = v?.commercial?.clienteEmpresa || 'Cliente não informado';
+    const projeto = v?.commercial?.projetoNome || 'Projeto sem nome';
 
     const el = document.createElement("div");
     el.className = "item";
@@ -275,6 +282,7 @@ async function renderLista(){
         <div>
           <h4>${escapeHtml(nome)}</h4>
           <small>${escapeHtml(tipo)} • ${escapeHtml(area)} m² • ${escapeHtml(pav)} pav. • Atualizado: ${escapeHtml(when)}</small>
+          <small class="item-sub">${escapeHtml(cliente)} • ${escapeHtml(projeto)}</small>
         </div>
         <div class="item-actions">
           <button class="mini mini-amber" data-open="${escapeHtml(v.id)}">Checklist</button>
@@ -1025,8 +1033,57 @@ function fillForm(v){
   $("#altura").value = (v.local.altura_m ?? "");
   $("#lotacao").value = (v.local.lotacao ?? "");
   $("#obs").value = (v.local.obs ?? "");
+  if ($("#clienteEmpresa")) $("#clienteEmpresa").value = (v.commercial?.clienteEmpresa ?? "");
+  if ($("#projetoNome")) $("#projetoNome").value = (v.commercial?.projetoNome ?? "");
+  if ($("#responsavelTecnico")) $("#responsavelTecnico").value = (v.commercial?.responsavelTecnico ?? "");
+  if ($("#contatoWhatsapp")) $("#contatoWhatsapp").value = (v.commercial?.contatoWhatsapp ?? "");
   const riscos = new Set(v.local.riscos || []);
   $all(".risco").forEach(ch => ch.checked = riscos.has(ch.value));
+}
+
+
+async function renderCommercialHub(){
+  const wrap = $("#recentClients");
+  if (!wrap) return;
+  const items = await dbListVistorias(120);
+  const byClient = new Map();
+  const inspectors = new Set();
+  for (const v of items){
+    const c = v?.commercial?.clienteEmpresa?.trim() || "Sem cliente";
+    const p = v?.commercial?.projetoNome?.trim() || "Projeto avulso";
+    const r = v?.commercial?.responsavelTecnico?.trim();
+    if (r) inspectors.add(r);
+    if (!byClient.has(c)) byClient.set(c, { count: 0, projects: new Set(), lastUpdate: 0, tipo: v?.local?.tipoLocal || 'comercio' });
+    const row = byClient.get(c);
+    row.count += 1;
+    row.projects.add(p);
+    row.lastUpdate = Math.max(row.lastUpdate, Number(v.updatedAt || 0));
+  }
+  const clientCountEl = $("#commercialClientsCount");
+  const projectCountEl = $("#commercialProjectsCount");
+  const inspectorsEl = $("#commercialInspectorsCount");
+  if (clientCountEl) clientCountEl.textContent = `${byClient.size} clientes`;
+  const totalProjects = Array.from(byClient.values()).reduce((n, row) => n + row.projects.size, 0);
+  if (projectCountEl) projectCountEl.textContent = `${totalProjects} projetos`;
+  if (inspectorsEl) inspectorsEl.textContent = `${inspectors.size} responsáveis`;
+
+  if (!items.length){
+    wrap.innerHTML = '<div class="client-empty">Cadastre clientes e projetos para visualizar a central comercial.</div>';
+    return;
+  }
+
+  const ordered = Array.from(byClient.entries()).sort((a,b) => b[1].lastUpdate - a[1].lastUpdate).slice(0,4);
+  wrap.innerHTML = ordered.map(([client, row]) => `
+    <article class="client-hub-card">
+      <div>
+        <strong>${escapeHtml(client)}</strong>
+        <small>${row.projects.size} projeto(s) • ${row.count} vistoria(s)</small>
+      </div>
+      <div class="client-meta">
+        <span>${escapeHtml(formatDateTime(row.lastUpdate || Date.now()))}</span>
+      </div>
+    </article>
+  `).join('');
 }
 
 /* ===== Router ===== */
@@ -1034,7 +1091,7 @@ async function handleRoute(){
   const base = routeBase();
   const params = getHashParams();
 
-  if (base.startsWith("#/home")){ setActiveView("#viewHome"); return; }
+  if (base.startsWith("#/home")){ setActiveView("#viewHome"); await renderCommercialHub(); return; }
   if (base.startsWith("#/nova")){ setActiveView("#viewNova"); return; }
   if (base.startsWith("#/salvas")){ setActiveView("#viewSalvas"); await renderLista(); return; }
 

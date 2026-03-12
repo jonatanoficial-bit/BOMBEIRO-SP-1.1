@@ -1,20 +1,8 @@
-VERSÃO 1.9.0
+VERSÃO 2.0.0
 
-Fase 5 — Modo Evento Profissional
-- cálculo automático de brigadistas
-- checklist específico de eventos
-- classificação de risco de evento
-
-Fase 6 — Sistema de Clientes e Projetos
-- base documental para clientes, locais e histórico
-
-Fase 7 — Dashboard Profissional
-- nova home premium com painel executivo
-- aparência de produto comercial mais forte
-- destaque para módulos, inteligência e operação
-
-Fase 8 — Splash com Vídeo + Cálculo Técnico Avançado
-- vídeo de abertura automático com opção de pular
-- entrada automática no app ao finalizar o vídeo
-- métricas técnicas avançadas
-- build e progresso atualizados em toda a interface
+Fase 9 — Estrutura Comercial e Modo Cliente
+- cadastro de cliente, projeto, responsável técnico e contato
+- central comercial na home
+- contadores executivos de clientes, projetos e responsáveis
+- listagem de clientes recentes
+- atualização visual da build e posicionamento comercial mais forte

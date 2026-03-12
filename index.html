@@ -23,7 +23,7 @@
     <source src="./assets/intro.mp4" type="video/mp4">
   </video>
   <div class="intro-overlay-ui">
-    <div class="intro-brand-pill">BombeiroSP · Build 2026-03-12 12:38</div>
+    <div class="intro-brand-pill">BombeiroSP · Build 2026-03-12 13:05</div>
     <div class="intro-copy">
       <span class="intro-kicker">ABERTURA OFICIAL</span>
       <h2>Pré-vistoria profissional com entrada premium em vídeo</h2>
@@ -69,10 +69,10 @@
           </div>
         </div>
         <div class="hero-body hero-body-premium">
-          <div class="eyebrow">FASE 8 · DASHBOARD PROFISSIONAL + CALCULO TECNICO AVANCADO</div>
-          <h2>Dashboard profissional, vídeo de abertura e cálculo técnico mais avançado</h2>
+          <div class="eyebrow">FASE 9 · ESTRUTURA COMERCIAL E MODO CLIENTE</div>
+          <h2>Estrutura comercial, modo cliente e painel mais vendável</h2>
           <p>
-            Experiência premium com splash em vídeo, painel executivo e métricas avançadas para comércio, eventos e operação em campo.
+            Agora o app traz base comercial mais forte, cadastro orientado a cliente, organização por projeto e visão executiva mais convincente para venda do serviço.
           </p>
 
           <div class="hero-actions" style="margin-top:16px;">
@@ -104,8 +104,8 @@
           </div>
           <div class="build-panel" aria-label="Informacoes da build">
             <div class="build-kicker">BUILD ATIVA</div>
-            <div class="build-version">v1.9.0 · Fase 8</div>
-            <div class="build-meta">Build 2026-03-12 12:38 · Progresso do projeto 82%</div>
+            <div class="build-version">v2.0.0 · Fase 9</div>
+            <div class="build-meta">Build 2026-03-12 13:05 · Progresso do projeto 87%</div>
           </div>
         </div>
       </section>
@@ -132,12 +132,12 @@
             <div class="eyebrow">DASHBOARD EXECUTIVO</div>
             <h3>Painel profissional do produto</h3>
           </div>
-          <div class="mini-badge">v1.9.0</div>
+          <div class="mini-badge">v2.0.0</div>
         </div>
         <div class="dashboard-pro-grid">
           <article class="dash-pro-card hot">
             <span>Produto</span>
-            <strong>82%</strong>
+            <strong>87%</strong>
             <small>Maturidade atual do projeto</small>
           </article>
           <article class="dash-pro-card">
@@ -163,9 +163,39 @@
           <div class="band-item"><b>Valor</b><span>Base comercial mais forte</span></div>
         </div>
 
+      <section class="card section-shell commercial-shell">
+        <div class="section-shell-head">
+          <div>
+            <div class="eyebrow">FASE 9 · MODO CLIENTE</div>
+            <h3>Central comercial e visão por projeto</h3>
+          </div>
+          <div class="mini-badge">Comercial Pro</div>
+        </div>
+        <div class="commercial-grid">
+          <article class="commercial-card">
+            <span>Pipeline</span>
+            <strong id="commercialProjectsCount">0 projetos</strong>
+            <small>Projetos cadastrados no aparelho</small>
+          </article>
+          <article class="commercial-card">
+            <span>Clientes</span>
+            <strong id="commercialClientsCount">0 clientes</strong>
+            <small>Base ativa para venda e recorrência</small>
+          </article>
+          <article class="commercial-card">
+            <span>Equipe</span>
+            <strong id="commercialInspectorsCount">0 responsáveis</strong>
+            <small>Profissionais vinculados às vistorias</small>
+          </article>
+        </div>
+        <div class="client-hub-list" id="recentClients">
+          <div class="client-empty">Cadastre clientes e projetos para visualizar a central comercial.</div>
+        </div>
+      </section>
+
       <div class="footer footer-premium">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span><br>
-        <span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span><br>
+        <span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
       </div>
     </section>
 
@@ -200,6 +230,42 @@
             <span class="hint">Rua, nº, bairro, cidade</span>
           </div>
           <input class="input" id="endereco" placeholder="Digite o endereço" required />
+        </div>
+
+        <div class="card inline-card">
+          <div class="label"><span>Modo cliente</span><span class="hint">Base comercial</span></div>
+          <div class="split">
+            <div class="field">
+              <div class="label">
+                <span>Cliente / Empresa</span>
+                <span class="hint">Opcional</span>
+              </div>
+              <input class="input" id="clienteEmpresa" placeholder="Ex.: Condomínio Alpha" />
+            </div>
+            <div class="field">
+              <div class="label">
+                <span>Projeto / Contrato</span>
+                <span class="hint">Opcional</span>
+              </div>
+              <input class="input" id="projetoNome" placeholder="Ex.: Pré-vistoria AVCB 2026" />
+            </div>
+          </div>
+          <div class="split">
+            <div class="field">
+              <div class="label">
+                <span>Responsável técnico</span>
+                <span class="hint">Opcional</span>
+              </div>
+              <input class="input" id="responsavelTecnico" placeholder="Nome do responsável" />
+            </div>
+            <div class="field">
+              <div class="label">
+                <span>WhatsApp / Contato</span>
+                <span class="hint">Opcional</span>
+              </div>
+              <input class="input" id="contatoWhatsapp" placeholder="(11) 99999-9999" />
+            </div>
+          </div>
         </div>
 
         <div class="split">
@@ -272,7 +338,7 @@
       </form>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
       </div>
     </section>
 
@@ -292,7 +358,7 @@
       <div class="list" id="listaVistorias"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
       </div>
     </section>
 
@@ -347,7 +413,7 @@
       <div id="chkContent"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
       </div>
     </section>
 
@@ -367,7 +433,7 @@
       <div class="report" id="reportBox"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 12:38 · v1.9.0 · Projeto 82%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
       </div>
     </section>
 
