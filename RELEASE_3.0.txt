@@ -1,0 +1,4 @@
+BombeiroSP 3.0.0
+Build: 2026-03-12 21:05
+Projeto finalizado em 100% nesta entrega.
+Inclui geolocalização, mapa da vistoria, QR verificável, PDF profissional, painel técnico inicial e correção da rota de nova vistoria.

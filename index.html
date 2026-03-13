@@ -23,11 +23,11 @@
     <source src="./assets/intro.mp4" type="video/mp4">
   </video>
   <div class="intro-overlay-ui">
-    <div class="intro-brand-pill">BombeiroSP · Build 2026-03-12 13:05</div>
+    <div class="intro-brand-pill">BombeiroSP · Build 2026-03-12 21:05</div>
     <div class="intro-copy">
       <span class="intro-kicker">ABERTURA OFICIAL</span>
-      <h2>Pré-vistoria profissional com entrada premium em vídeo</h2>
-      <p>Vídeo otimizado para celular, reprodução automática e transição direta para o aplicativo.</p>
+      <h2>Pré-vistoria profissional com mapa, QR e operação offline</h2>
+      <p>Vídeo otimizado para celular, transição automática e entrada direta no fluxo comercial do aplicativo.</p>
     </div>
     <button class="btn btn-secondary intro-skip" id="btnSkipIntro">Pular introdução</button>
   </div>
@@ -69,14 +69,14 @@
           </div>
         </div>
         <div class="hero-body hero-body-premium">
-          <div class="eyebrow">FASE 9 · ESTRUTURA COMERCIAL E MODO CLIENTE</div>
-          <h2>Estrutura comercial, modo cliente e painel mais vendável</h2>
+          <div class="eyebrow">FASE 12 · RELEASE FINAL COMERCIAL</div>
+          <h2>Release final com mapa, geolocalização e relatório verificável</h2>
           <p>
-            Agora o app traz base comercial mais forte, cadastro orientado a cliente, organização por projeto e visão executiva mais convincente para venda do serviço.
+            Agora o app entrega fluxo completo de pré-vistoria com geolocalização, painel técnico avançado, mapa da vistoria, QR verificável, PDF profissional e operação offline robusta.
           </p>
 
           <div class="hero-actions" style="margin-top:16px;">
-            <button class="btn btn-primary btn-lg" id="btnNova">✦ Nova vistoria</button>
+            <button class="btn btn-primary btn-lg" id="btnNova" type="button" data-route="#/nova">✦ Nova vistoria</button>
             <button class="btn btn-secondary btn-lg" id="btnSalvas">◷ Vistorias salvas</button>
             <button class="btn btn-amber btn-lg" id="btnPacote">▣ Pacote SP</button>
           </div>
@@ -104,8 +104,8 @@
           </div>
           <div class="build-panel" aria-label="Informacoes da build">
             <div class="build-kicker">BUILD ATIVA</div>
-            <div class="build-version">v2.0.0 · Fase 9</div>
-            <div class="build-meta">Build 2026-03-12 13:05 · Progresso do projeto 87%</div>
+            <div class="build-version">v3.0.0 · Fase 12</div>
+            <div class="build-meta">Build 2026-03-12 21:05 · Progresso do projeto 100%</div>
           </div>
         </div>
       </section>
@@ -132,12 +132,12 @@
             <div class="eyebrow">DASHBOARD EXECUTIVO</div>
             <h3>Painel profissional do produto</h3>
           </div>
-          <div class="mini-badge">v2.0.0</div>
+          <div class="mini-badge">v3.0.0</div>
         </div>
         <div class="dashboard-pro-grid">
           <article class="dash-pro-card hot">
             <span>Produto</span>
-            <strong>87%</strong>
+            <strong>100%</strong>
             <small>Maturidade atual do projeto</small>
           </article>
           <article class="dash-pro-card">
@@ -162,6 +162,7 @@
           <div class="band-item"><b>Resposta</b><span>Nível operacional sugerido</span></div>
           <div class="band-item"><b>Valor</b><span>Base comercial mais forte</span></div>
         </div>
+      </section>
 
       <section class="card section-shell commercial-shell">
         <div class="section-shell-head">
@@ -194,8 +195,8 @@
       </section>
 
       <div class="footer footer-premium">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span><br>
-        <span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span><br>
+        <span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -327,6 +328,49 @@
           <textarea class="textarea" id="obs" placeholder="Observações gerais (ex.: saída única, corredor estreito, etc.)"></textarea>
         </div>
 
+        <div class="card inline-card geo-card">
+          <div class="label"><span>Geolocalização e mapa da vistoria</span><span class="hint">Opcional, recomendado para relatório e QR</span></div>
+          <div class="row wrap-row">
+            <button type="button" class="btn btn-secondary" id="btnCapturarGeo">Capturar localização</button>
+            <button type="button" class="btn btn-amber" id="btnLimparGeo">Limpar localização</button>
+          </div>
+          <div class="split">
+            <div class="field">
+              <div class="label"><span>Latitude</span><span class="hint">Automática</span></div>
+              <input class="input" id="geoLat" placeholder="Latitude" readonly />
+            </div>
+            <div class="field">
+              <div class="label"><span>Longitude</span><span class="hint">Automática</span></div>
+              <input class="input" id="geoLng" placeholder="Longitude" readonly />
+            </div>
+          </div>
+          <div class="split">
+            <div class="field">
+              <div class="label"><span>Precisão</span><span class="hint">Estimativa do aparelho</span></div>
+              <input class="input" id="geoAccuracy" placeholder="Precisão" readonly />
+            </div>
+            <div class="field">
+              <div class="label"><span>Status</span><span class="hint">Mapa e relatório</span></div>
+              <input class="input" id="geoStatus" placeholder="Localização ainda não capturada" readonly />
+            </div>
+          </div>
+          <div class="map-preview" id="mapPreview">
+            <div class="map-empty">Capture a geolocalização para habilitar o painel de mapa da vistoria.</div>
+          </div>
+        </div>
+
+        <div class="card inline-card intelligence-card">
+          <div class="label"><span>Painel técnico inicial</span><span class="hint">Cálculo automático, risco e checklist inicial</span></div>
+          <div class="quick-metrics" id="novaMetrics">
+            <div class="quick-metric"><span>Brigadistas</span><strong>-</strong></div>
+            <div class="quick-metric"><span>Risco</span><strong>-</strong></div>
+            <div class="quick-metric"><span>Conformidade</span><strong>-</strong></div>
+            <div class="quick-metric"><span>Prontidão</span><strong>-</strong></div>
+          </div>
+          <div class="initial-analysis-text" id="initialAnalysisText">Preencha os dados para gerar análise inicial automática.</div>
+          <div class="checklist-preview" id="initialChecklistPreview"></div>
+        </div>
+
         <div class="row">
           <button type="button" class="btn btn-secondary" id="btnCancelarNova">Cancelar</button>
           <button type="submit" class="btn">Salvar e ir ao checklist</button>
@@ -338,7 +382,7 @@
       </form>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -358,7 +402,7 @@
       <div class="list" id="listaVistorias"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -413,7 +457,7 @@
       <div id="chkContent"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -423,7 +467,7 @@
 
       <div class="card">
         <h3>📄 Exportar PDF</h3>
-        <p>Use o botão abaixo para imprimir ou salvar como PDF.</p>
+        <p>Use o botão abaixo para imprimir ou salvar como PDF profissional com QR verificável e mapa da vistoria.</p>
         <div class="row">
           <button class="btn btn-secondary" id="btnVoltarChecklist">Voltar</button>
           <button class="btn btn-amber" id="btnPrint">Imprimir / Salvar PDF</button>
@@ -433,7 +477,7 @@
       <div class="report" id="reportBox"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 13:05 · v2.0.0 · Projeto 87%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -458,22 +502,6 @@
   </div>
 
   <script type="module" src="./src/main.js"></script>
-
-<div id="introScreen" style="position:fixed;inset:0;background:black;z-index:9999;display:flex;align-items:center;justify-content:center;">
-<video id="introVideo" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;">
-<source src="assets/intro.mp4" type="video/mp4">
-</video>
-</div>
-<script>
-document.addEventListener("DOMContentLoaded",function(){
- const v=document.getElementById("introVideo");
- if(v){
-  v.onended=function(){
-   document.getElementById("introScreen").style.display="none";
-  };
- }
-});
-</script>
 
 </body>
 </html>

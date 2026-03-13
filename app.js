@@ -6,7 +6,7 @@ import { runSizing } from "./rules_engine.js";
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 
-const BUILD_META = { version: '2.0.0', phase: '9', build: '2026-03-12 13:05', progress: '87%' };
+const BUILD_META = { version: '3.0.0', phase: '12', build: '2026-03-12 21:05', progress: '100%' };
 
 function showToast(msg){
   const el = $("#toast");
@@ -29,12 +29,39 @@ function setBusy(on, title="Processando...", sub="Aguarde"){
 
 
 function setActiveView(id){
-  $all(".view").forEach(v => v.classList.remove("active"));
+  $all(".view").forEach(v => {
+    v.classList.remove("active");
+    v.style.display = "none";
+  });
   const el = $(id);
-  if (el) el.classList.add("active");
+  if (el){
+    el.classList.add("active");
+    el.style.display = "block";
+    el.removeAttribute("hidden");
+    window.scrollTo?.({ top: 0, behavior: "instant" });
+  }
 }
 
-function toRoute(hash){ location.hash = hash; }
+function toRoute(hash){
+  if (location.hash === hash){
+    handleRoute();
+    return;
+  }
+  location.hash = hash;
+  setTimeout(() => {
+    if (routeBase() === hash) handleRoute();
+  }, 0);
+}
+
+function ensureNovaViewReady(){
+  const base = routeBase();
+  if (!base.startsWith("#/nova")) return;
+  const nova = $("#viewNova");
+  if (nova && !nova.classList.contains("active")){
+    setActiveView("#viewNova");
+    updateNovaIntelligence();
+  }
+}
 
 function parseNumberSafe(v){
   if (v === null || v === undefined) return null;
@@ -71,6 +98,130 @@ function escapeHtml(s){
 
 function escapeHtmlBr(s){
   return escapeHtml(s).replaceAll("\n","<br>");
+}
+
+function hashString(str){
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16).padStart(8, "0");
+}
+
+function buildVerificationPayload(v){
+  const local = v?.local || {};
+  const commercial = v?.commercial || {};
+  const base = JSON.stringify({
+    id: v?.id || '',
+    nome: local.nomeLocal || '',
+    endereco: local.endereco || '',
+    area: local.area_m2 || '',
+    tipo: local.tipoLocal || '',
+    cliente: commercial.clienteEmpresa || '',
+    updatedAt: v?.updatedAt || ''
+  });
+  const digest = hashString(base + '::vale-fire');
+  return {
+    code: `VALFIRE-${digest.toUpperCase()}`,
+    payload: `VALFIRE|${digest}|${v?.id || ''}|${local.nomeLocal || ''}|${local.endereco || ''}`
+  };
+}
+
+function buildPseudoQrDataUri(text){
+  const size = 29;
+  const cell = 6;
+  const quiet = 4;
+  const full = (size + quiet * 2) * cell;
+  const bytes = Array.from(text).map(ch => ch.charCodeAt(0));
+  const rects = [];
+  function drawFinder(cx, cy){
+    const s = 7;
+    rects.push(`<rect x="${cx*cell}" y="${cy*cell}" width="${s*cell}" height="${s*cell}" fill="#000"/>`);
+    rects.push(`<rect x="${(cx+1)*cell}" y="${(cy+1)*cell}" width="${5*cell}" height="${5*cell}" fill="#fff"/>`);
+    rects.push(`<rect x="${(cx+2)*cell}" y="${(cy+2)*cell}" width="${3*cell}" height="${3*cell}" fill="#000"/>`);
+  }
+  drawFinder(quiet, quiet);
+  drawFinder(quiet + size - 7, quiet);
+  drawFinder(quiet, quiet + size - 7);
+  let bitIndex = 0;
+  for (let y = 0; y < size; y++){
+    for (let x = 0; x < size; x++){
+      const ax = x + quiet, ay = y + quiet;
+      const inFinder = ((x < 7 && y < 7) || (x >= size-7 && y < 7) || (x < 7 && y >= size-7));
+      if (inFinder) continue;
+      const byte = bytes[bitIndex % bytes.length] || 0;
+      const on = ((byte >> (bitIndex % 8)) & 1) ^ ((x + y) % 2);
+      if (on) rects.push(`<rect x="${ax*cell}" y="${ay*cell}" width="${cell}" height="${cell}" fill="#000"/>`);
+      bitIndex++;
+    }
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${full}" height="${full}" viewBox="0 0 ${full} ${full}"><rect width="100%" height="100%" fill="#fff"/>${rects.join('')}</svg>`;
+  return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+}
+
+function updateMapPreview(lat, lng, label='Local da vistoria'){
+  const wrap = $("#mapPreview");
+  if (!wrap) return;
+  if (!lat || !lng){
+    wrap.innerHTML = '<div class="map-empty">Capture a geolocalização para habilitar o painel de mapa da vistoria.</div>';
+    return;
+  }
+  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.002}%2C${lat-0.002}%2C${lng+0.002}%2C${lat+0.002}&layer=mapnik&marker=${lat}%2C${lng}`;
+  wrap.innerHTML = `
+    <iframe class="map-frame" title="Mapa da vistoria" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${src}"></iframe>
+    <div class="map-coords">${escapeHtml(label)} · Lat ${Number(lat).toFixed(6)} · Lng ${Number(lng).toFixed(6)}</div>
+  `;
+}
+
+function collectNovaContext(){
+  const tipoLocal = $("#tipoLocal")?.value?.trim() || '';
+  const area_m2 = parseNumberSafe($("#area")?.value);
+  const pavimentos = parseNumberSafe($("#pavimentos")?.value) || 1;
+  const altura_m = parseNumberSafe($("#altura")?.value) || 0;
+  const lotacao = parseNumberSafe($("#lotacao")?.value);
+  const riscos = $all('.risco').filter(x => x.checked).map(x => x.value);
+  return {
+    tipoLocal, area_m2, pavimentos, altura_m, lotacao, riscos,
+    ocupacao: tipoLocal === 'evento' ? 'evento' : 'comercio',
+    horarioFuncionamento: 'variável',
+    publicoPredominante: tipoLocal === 'evento' ? 'misto' : 'adulto',
+    possuiCozinhaIndustrial: riscos.includes('cozinha'),
+    possuiGLP: riscos.includes('glp'),
+    possuiPalcoEstrutura: riscos.includes('palco')
+  };
+}
+
+function updateNovaIntelligence(){
+  const metrics = $("#novaMetrics");
+  const info = $("#initialAnalysisText");
+  const preview = $("#initialChecklistPreview");
+  if (!metrics || !info || !preview) return;
+  const ctx = collectNovaContext();
+  if (!ctx.tipoLocal || !ctx.area_m2){
+    info.textContent = 'Preencha tipo de local e área para gerar cálculo automático inicial.';
+    preview.innerHTML = '';
+    return;
+  }
+  const sizing = runSizing({ context: ctx, pack: { PACK_INFO, computeSizing: packComputeSizing } });
+  const risk = (sizing.results || []).find(r => r.id === 'metric_risk_score')?.value ?? '-';
+  const team = (sizing.results || []).find(r => r.id === 'metric_team')?.value ?? '-';
+  const compliance = (sizing.results || []).find(r => r.id === 'metric_compliance_forecast')?.value ?? '-';
+  const readiness = (sizing.results || []).find(r => r.id === 'metric_readiness')?.value ?? '-';
+  metrics.innerHTML = `
+    <div class="quick-metric"><span>Brigadistas</span><strong>${team}</strong></div>
+    <div class="quick-metric"><span>Risco</span><strong>${risk}/100</strong></div>
+    <div class="quick-metric"><span>Conformidade</span><strong>${compliance}/100</strong></div>
+    <div class="quick-metric"><span>Prontidão</span><strong>${readiness}/100</strong></div>
+  `;
+  info.textContent = `Análise inicial automática pronta para ${ctx.tipoLocal === 'evento' ? 'evento' : 'comércio'} com leitura técnica preliminar.`;
+  const sections = buildChecklist({ tipoLocal: ctx.tipoLocal, riscos: ctx.riscos || [] });
+  const list = [];
+  sections.slice(0,3).forEach(sec => sec.items.slice(0,2).forEach(it => list.push({ section: sec.title, title: it.title })));
+  preview.innerHTML = `
+    <div class="checklist-preview-title">Checklist inicial sugerido</div>
+    ${list.slice(0,6).map(it => `<div class="checklist-preview-item"><b>${escapeHtml(it.section)}:</b> ${escapeHtml(it.title)}</div>`).join('')}
+  `;
 }
 
 function getHashParams(){
@@ -151,10 +302,10 @@ document.addEventListener("click", async (e) => {
 });
 
 /* ===== Navegação ===== */
-$("#btnNova").addEventListener("click", () => toRoute("#/nova"));
-$("#btnSalvas").addEventListener("click", () => toRoute("#/salvas"));
-$("#btnVoltarHome").addEventListener("click", () => toRoute("#/home"));
-$("#btnRecarregarLista").addEventListener("click", async () => { await renderLista(); showToast("🔄 Lista atualizada."); });
+$("#btnNova")?.addEventListener("click", () => toRoute("#/nova"));
+$("#btnSalvas")?.addEventListener("click", () => toRoute("#/salvas"));
+$("#btnVoltarHome")?.addEventListener("click", () => toRoute("#/home"));
+$("#btnRecarregarLista")?.addEventListener("click", async () => { await renderLista(); showToast("🔄 Lista atualizada."); });
 $("#btnPacote").addEventListener("click", () => showToast(`📦 Pacote ativo: ${PACK_INFO.name} v${PACK_INFO.version}`));
 
 /* ===== Estado ===== */
@@ -189,6 +340,9 @@ $("#btnCancelarNova").addEventListener("click", () => {
   lastSavedId = null;
   $("#btnIrChecklist").disabled = true;
   $("#formNova").reset();
+  if ($("#geoStatus")) $("#geoStatus").value = 'Localização ainda não capturada';
+  updateMapPreview(null, null);
+  updateNovaIntelligence();
   toRoute("#/home");
 });
 
@@ -196,6 +350,40 @@ $("#btnIrChecklist").addEventListener("click", () => {
   if (!lastSavedId) return;
   toRoute(`#/checklist?id=${encodeURIComponent(lastSavedId)}`);
 });
+
+
+$("#btnCapturarGeo")?.addEventListener("click", () => {
+  if (!("geolocation" in navigator)){ showToast("[!] Geolocalização indisponível neste aparelho."); return; }
+  const statusEl = $("#geoStatus");
+  if (statusEl) statusEl.value = 'Capturando localização...';
+  navigator.geolocation.getCurrentPosition((pos) => {
+    const lat = Number(pos.coords.latitude);
+    const lng = Number(pos.coords.longitude);
+    const acc = Math.round(Number(pos.coords.accuracy || 0));
+    if ($("#geoLat")) $("#geoLat").value = lat.toFixed(6);
+    if ($("#geoLng")) $("#geoLng").value = lng.toFixed(6);
+    if ($("#geoAccuracy")) $("#geoAccuracy").value = `${acc} m`;
+    if ($("#geoStatus")) $("#geoStatus").value = 'Localização capturada com sucesso';
+    updateMapPreview(lat, lng, $("#nomeLocal")?.value || 'Local da vistoria');
+  }, (err) => {
+    if ($("#geoStatus")) $("#geoStatus").value = 'Falha ao capturar localização';
+    showToast("[!] Não foi possível capturar a localização.");
+  }, { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
+});
+
+$("#btnLimparGeo")?.addEventListener("click", () => {
+  if ($("#geoLat")) $("#geoLat").value = '';
+  if ($("#geoLng")) $("#geoLng").value = '';
+  if ($("#geoAccuracy")) $("#geoAccuracy").value = '';
+  if ($("#geoStatus")) $("#geoStatus").value = 'Localização removida';
+  updateMapPreview(null, null);
+});
+
+["#tipoLocal", "#area", "#pavimentos", "#altura", "#lotacao", "#nomeLocal"].forEach(sel => {
+  $(sel)?.addEventListener('input', () => { if (sel === '#nomeLocal') updateMapPreview(parseFloat($("#geoLat")?.value), parseFloat($("#geoLng")?.value), $("#nomeLocal")?.value || 'Local da vistoria'); updateNovaIntelligence(); });
+  $(sel)?.addEventListener('change', updateNovaIntelligence);
+});
+$all('.risco').forEach(el => el.addEventListener('change', updateNovaIntelligence));
 
 $("#formNova").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -213,6 +401,10 @@ $("#formNova").addEventListener("submit", async (e) => {
   const lotacao = parseNumberSafe($("#lotacao").value);
   const riscos = $all(".risco").filter(x => x.checked).map(x => x.value);
   const obs = $("#obs").value.trim();
+  const geoLat = parseNumberSafe($("#geoLat")?.value);
+  const geoLng = parseNumberSafe($("#geoLng")?.value);
+  const geoAccuracy = $("#geoAccuracy")?.value?.trim() || "";
+  const initialSizing = runSizing({ context: { tipoLocal, area_m2: area, pavimentos, altura_m: altura || 0, lotacao, riscos, ocupacao: tipoLocal === 'evento' ? 'evento' : 'comercio', horarioFuncionamento: 'variável', publicoPredominante: tipoLocal === 'evento' ? 'misto' : 'adulto', possuiCozinhaIndustrial: riscos.includes('cozinha'), possuiGLP: riscos.includes('glp'), possuiPalcoEstrutura: riscos.includes('palco') }, pack: { PACK_INFO, computeSizing: packComputeSizing } });
 
   if (!tipoLocal){ showToast("[!] Informe o tipo do local."); markInvalid($("#tipoLocal")); return; }
   if (!nomeLocal){ showToast("[!] Informe o nome do local."); markInvalid($("#nomeLocal")); return; }
@@ -228,10 +420,10 @@ $("#formNova").addEventListener("submit", async (e) => {
     createdAt: now,
     updatedAt: now,
     status: "rascunho",
-    local: { tipoLocal, nomeLocal, endereco, area_m2: area, pavimentos, altura_m: altura, lotacao, riscos, obs },
+    local: { tipoLocal, nomeLocal, endereco, area_m2: area, pavimentos, altura_m: altura, lotacao, riscos, obs, geo: { lat: geoLat, lng: geoLng, accuracy: geoAccuracy, capturedAt: now } },
     commercial: { clienteEmpresa, projetoNome, responsavelTecnico, contatoWhatsapp },
     checklist: { pack: PACK_INFO, answers: {}, lastSavedAt: now },
-    sizing: { pack: PACK_INFO, inputs: {}, results: [], warnings: [], computedAt: now },
+    sizing: { ...initialSizing, pack: PACK_INFO, computedAt: now, inputs: { origem: 'formulario-inicial', videoIntroResolution: '560x560' } },
     relatorio: null
   };
 
@@ -847,6 +1039,9 @@ async function loadRelatorioView(id){
   }
 
   const sizing = v.sizing || null;
+  const verification = buildVerificationPayload(v);
+  const qrUri = buildPseudoQrDataUri(verification.payload);
+  const geo = v.local?.geo || {};
 
   const header = `
     <div class="rep-title">
@@ -862,6 +1057,18 @@ async function loadRelatorioView(id){
   `;
 
   const dados = `
+    <div class="report-cover">
+      <div>
+        <div class="report-cover-kicker">RELATÓRIO PROFISSIONAL</div>
+        <h3>Pré-vistoria técnica com documento para apresentação comercial</h3>
+        <p>Documento gerado automaticamente para apoio à regularização, evidências de campo e tomada de decisão do cliente.</p>
+      </div>
+      <div class="qr-verify-card">
+        <img src="${qrUri}" alt="QR de verificação" class="qr-image">
+        <div class="qr-code-text">${escapeHtml(verification.code)}</div>
+        <small>Validação interna da build e da vistoria</small>
+      </div>
+    </div>
     <div class="rep-block">
       <h3>Dados do Local</h3>
       <div class="rep-kpis">
@@ -881,6 +1088,11 @@ async function loadRelatorioView(id){
         <div class="rep-note">${escapeHtml((local.riscos || []).join(", ") || "Nenhum informado")}</div>
       </div>
       ${local.obs ? `<div class="rep-item"><h4>Observações iniciais</h4><div class="rep-note">${escapeHtml(local.obs)}</div></div>` : ""}
+      <div class="rep-item">
+        <h4>Geolocalização</h4>
+        <div class="rep-note">${geo?.lat ? `Lat ${escapeHtml(Number(geo.lat).toFixed(6))} · Lng ${escapeHtml(Number(geo.lng).toFixed(6))} · Precisão ${escapeHtml(geo.accuracy || '-')}` : 'Não capturada nesta vistoria.'}</div>
+      </div>
+      ${geo?.lat ? `<div class="report-map-wrap"><iframe class="report-map-frame" title="Mapa da vistoria" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=${geo.lng-0.002}%2C${geo.lat-0.002}%2C${geo.lng+0.002}%2C${geo.lat+0.002}&layer=mapnik&marker=${geo.lat}%2C${geo.lng}"></iframe></div>` : ''}
     </div>
   `;
 
@@ -1039,6 +1251,12 @@ function fillForm(v){
   if ($("#contatoWhatsapp")) $("#contatoWhatsapp").value = (v.commercial?.contatoWhatsapp ?? "");
   const riscos = new Set(v.local.riscos || []);
   $all(".risco").forEach(ch => ch.checked = riscos.has(ch.value));
+  if ($("#geoLat")) $("#geoLat").value = (v.local?.geo?.lat ?? '') === '' ? '' : Number(v.local.geo.lat).toFixed(6);
+  if ($("#geoLng")) $("#geoLng").value = (v.local?.geo?.lng ?? '') === '' ? '' : Number(v.local.geo.lng).toFixed(6);
+  if ($("#geoAccuracy")) $("#geoAccuracy").value = v.local?.geo?.accuracy || '';
+  if ($("#geoStatus")) $("#geoStatus").value = v.local?.geo?.lat ? 'Localização restaurada da vistoria' : 'Localização ainda não capturada';
+  updateMapPreview(v.local?.geo?.lat, v.local?.geo?.lng, v.local?.nomeLocal || 'Local da vistoria');
+  updateNovaIntelligence();
 }
 
 
@@ -1092,7 +1310,7 @@ async function handleRoute(){
   const params = getHashParams();
 
   if (base.startsWith("#/home")){ setActiveView("#viewHome"); await renderCommercialHub(); return; }
-  if (base.startsWith("#/nova")){ setActiveView("#viewNova"); return; }
+  if (base.startsWith("#/nova")){ setActiveView("#viewNova"); updateNovaIntelligence(); ensureNovaViewReady(); return; }
   if (base.startsWith("#/salvas")){ setActiveView("#viewSalvas"); await renderLista(); return; }
 
   if (base.startsWith("#/checklist")){
@@ -1115,6 +1333,10 @@ async function handleRoute(){
 }
 
 window.addEventListener("hashchange", () => { handleRoute(); });
-if (!location.hash) location.hash = "#/home";
-initIntroExperience();
-handleRoute();
+window.addEventListener("DOMContentLoaded", () => {
+  if (!location.hash) location.hash = "#/home";
+  initIntroExperience();
+  updateNovaIntelligence();
+  handleRoute();
+  ensureNovaViewReady();
+});

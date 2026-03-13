@@ -1,0 +1,5 @@
+Deploy notes
+1. Substitua todos os arquivos antigos do GitHub Pages por este ZIP completo.
+2. Faça hard refresh no navegador (Ctrl+F5) após publicar.
+3. Se o Service Worker antigo estiver em cache, limpe os dados do site e atualize.
+4. A rota correta continua em hash, por exemplo: #/home e #/nova
