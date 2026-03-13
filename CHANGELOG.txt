@@ -1,21 +1,8 @@
-VERSAO 3.0.0
+VERSAO 3.0.2
 
-Fase 12 — Release final comercial
-- correção da tela Nova Vistoria
-- cálculo automático de brigadistas já no formulário
-- análise de risco inicial automática
-- checklist inicial orientativo
-- geolocalização da vistoria
-- painel de mapa da vistoria
-- relatório PDF profissional com QR verificável
-- modo offline completo com cache ampliado
-
-
-VERSÃO 3.0.1
-
-Correção crítica
-- corrigida a navegação da rota #/nova
-- reforçada a ativação da view Nova Vistoria
-- fallback para reabrir a view quando a hash já estiver ativa
-- listeners de navegação tornados seguros
-- bootstrap ajustado para DOMContentLoaded
+Fase 12B - Refinamento comercial do dashboard
+- revisão completa dos textos da home para linguagem comercial
+- remoção de mensagens sem sentido comercial
+- painel executivo com foco em clientes, propostas, entrega e recorrência
+- ajuste de posicionamento do produto para venda de inspeções
+- build atualizada na interface

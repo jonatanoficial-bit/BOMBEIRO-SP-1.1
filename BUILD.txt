@@ -1,6 +1,5 @@
 Projeto: BombeiroSP
-Versão: 3.0.1
-Build: 2026-03-12 21:35
-Fase: 12A - Correção da rota Nova Vistoria
+Versão: 3.0.2
+Fase: 12B - Refinamento comercial do dashboard
+Build: 2026-03-13 09:05
 Progresso: 100%
-Status: ZIP completo com correção da tela Nova Vistoria, cálculo automático, mapa, geolocalização, PDF, QR e offline.
