@@ -1,8 +1,6 @@
-VERSAO 3.0.3
+VERSAO 3.0.4
 
-Fase 12C - Limpeza visual da introducao
-- remocao das mensagens sobre o video de abertura
-- intro mantida apenas com video em tela cheia
-- botao de pular introducao preservado
-- ajuste visual para desktop e celular
-- build atualizada
+Ajuste de comunicação comercial na home
+- substituição do texto de apresentação
+- posicionamento comercial do produto
+- foco em inspeção profissional e geração de relatórios

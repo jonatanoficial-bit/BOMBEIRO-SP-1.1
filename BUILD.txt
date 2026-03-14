@@ -1,5 +1,5 @@
 Projeto: BombeiroSP
-Versão: 3.0.3
-Fase: 12C - Limpeza visual da introdução
-Build: 2026-03-13 09:35
+Versão: 3.0.4
+Fase: Ajuste comercial da apresentação
+Build: 2026-03-14 13:35
 Progresso: 100%
