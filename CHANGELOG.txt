@@ -1,6 +1,7 @@
-VERSAO 3.0.4
+VERSAO 3.0.5
 
-Ajuste de comunicação comercial na home
-- substituição do texto de apresentação
-- posicionamento comercial do produto
-- foco em inspeção profissional e geração de relatórios
+Ajuste comercial da home
+- hero principal reescrito com linguagem mais vendável
+- benefícios rápidos adicionados na abertura
+- cards da home com foco em valor comercial, diagnóstico e operação
+- atualização de build na interface
