@@ -1123,3 +1123,33 @@ body.app-booting{overflow:hidden;}
 .report-map-frame{width:100%;height:260px;border:0;display:block;}
 @media (max-width: 900px){.quick-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}.report-cover{grid-template-columns:1fr;}}
 @media print{.intro-splash,.topbar,#btnPrint,#btnVoltarChecklist,.toast,.overlay{display:none !important;}body{background:#fff;color:#111;}.report-cover,.rep-block,.rep-item,.qr-verify-card{break-inside:avoid;}}
+
+
+/* Build 3.0.3 - intro clean */
+#introSplash{
+  background:#000 !important;
+}
+#introSplash::before,
+#introSplash::after{
+  content:none !important;
+}
+#introSplash .intro-overlay,
+#introSplash .intro-copy,
+#introSplash .intro-brand-badge,
+#introSplash .intro-kicker,
+#introSplash .intro-title,
+#introSplash .intro-subtitle{
+  display:none !important;
+}
+#introSplash video,
+#introVideo{
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover !important;
+}
+#introSplash .intro-skip{
+  position:fixed !important;
+  right:18px !important;
+  bottom:18px !important;
+  z-index:10002 !important;
+}

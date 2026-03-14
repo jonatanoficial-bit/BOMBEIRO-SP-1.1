@@ -1,8 +1,8 @@
-VERSAO 3.0.2
+VERSAO 3.0.3
 
-Fase 12B - Refinamento comercial do dashboard
-- revisão completa dos textos da home para linguagem comercial
-- remoção de mensagens sem sentido comercial
-- painel executivo com foco em clientes, propostas, entrega e recorrência
-- ajuste de posicionamento do produto para venda de inspeções
-- build atualizada na interface
+Fase 12C - Limpeza visual da introducao
+- remocao das mensagens sobre o video de abertura
+- intro mantida apenas com video em tela cheia
+- botao de pular introducao preservado
+- ajuste visual para desktop e celular
+- build atualizada

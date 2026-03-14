@@ -1,5 +1,5 @@
 Projeto: BombeiroSP
-Versão: 3.0.2
-Fase: 12B - Refinamento comercial do dashboard
-Build: 2026-03-13 09:05
+Versão: 3.0.3
+Fase: 12C - Limpeza visual da introdução
+Build: 2026-03-13 09:35
 Progresso: 100%
