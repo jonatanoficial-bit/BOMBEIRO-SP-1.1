@@ -1,10 +1,9 @@
-VERSAO 3.1.0
+VERSAO 3.4.0
 
-Fase 13 - Motor de recomendacao tecnica automatica
-- estimativa automatica do que o local provavelmente precisa
-- quantidade estimada de extintores e classes sugeridas
-- indicacao inicial de hidrante, iluminacao, sinalizacao e alarme
-- estimativa de brigadistas integrada
-- bloco de necessidades do local na nova vistoria
-- bloco de necessidades estimadas no checklist e no relatorio
-- checklist inicial refletindo as sugestoes automaticas
+Fase 16 - Calculo por area setorizada e carga de incendio
+- campos para area de atendimento, deposito e cozinha
+- selecao de carga de incendio baixa, media ou alta
+- estimativa automatica mais precisa por setor
+- extintores agora consideram atendimento, deposito e cozinha
+- hidrante e alarme ajustados por armazenamento e carga
+- checklist inicial reforcado por setores internos

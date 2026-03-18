@@ -6,7 +6,7 @@ import { runSizing } from "./rules_engine.js";
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 
-const BUILD_META = { version: '3.1.0', phase: '13', build: '2026-03-13 11:35', progress: '100%' };
+const BUILD_META = { version: '3.4.0', phase: '16', build: '2026-03-18 11:35', progress: '100%' };
 
 function showToast(msg){
   const el = $("#toast");
@@ -229,6 +229,10 @@ function renderAutoPlanBlock(plan){
 
 function collectNovaContext(){
   const tipoLocal = $("#tipoLocal")?.value?.trim() || '';
+  const areaAtendimento = parseNumberSafe($("#areaAtendimento")?.value) || 0;
+  const areaDeposito = parseNumberSafe($("#areaDeposito")?.value) || 0;
+  const areaCozinha = parseNumberSafe($("#areaCozinha")?.value) || 0;
+  const cargaIncendio = $("#cargaIncendio")?.value?.trim() || 'baixa';
   const area_m2 = parseNumberSafe($("#area")?.value);
   const pavimentos = parseNumberSafe($("#pavimentos")?.value) || 1;
   const altura_m = parseNumberSafe($("#altura")?.value) || 0;
@@ -270,7 +274,7 @@ function updateNovaIntelligence(){
     <div class="quick-metric"><span>Prontidão</span><strong>${readiness}/100</strong></div>
   `;
   info.textContent = plan
-    ? `Estimativa automática pronta: ${plan.extintores.quantidade} extintor(es), ${plan.hidrante ? 'provável hidrante' : 'hidrante sem indicativo forte'}, ${plan.iluminacao ? 'iluminação' : 'iluminação a validar'}, ${plan.sinalizacao ? 'sinalização' : 'sinalização a validar'} e equipe mínima de ${plan.brigadistas}.`
+    ? `Estimativa automática pronta: ${plan.extintores.quantidade} extintor(es), ${plan.hidrante ? 'provável hidrante' : 'hidrante sem indicativo forte'}, ${plan.iluminacao ? 'iluminação' : 'iluminação a validar'}, ${plan.sinalizacao ? 'sinalização' : 'sinalização a validar'}, carga ${plan.sectorProfile?.cargaIncendio || "baixa"} e equipe mínima de ${plan.brigadistas}.`
     : 'Análise inicial automática pronta.';
   const sections = buildChecklist({ tipoLocal: ctx.tipoLocal, riscos: ctx.riscos || [] });
   const list = [];
@@ -448,6 +452,10 @@ $("#formNova").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const tipoLocal = $("#tipoLocal").value.trim();
+  const areaAtendimento = parseNumberSafe($("#areaAtendimento")?.value) || 0;
+  const areaDeposito = parseNumberSafe($("#areaDeposito")?.value) || 0;
+  const areaCozinha = parseNumberSafe($("#areaCozinha")?.value) || 0;
+  const cargaIncendio = $("#cargaIncendio")?.value?.trim() || 'baixa';
   const nomeLocal = $("#nomeLocal").value.trim();
   const endereco = $("#endereco").value.trim();
   const clienteEmpresa = $("#clienteEmpresa")?.value.trim() || "";

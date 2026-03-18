@@ -330,6 +330,8 @@ function estimateMinimumTeam({ tipoLocal, lot, area, pav, riskScore, palco }) {
 }
 
 
+
+
 export function computeNeedsEstimate(context) {
   const area = Number(context.area_m2 || 0);
   const lot = Number(context.lotacao || 0);
@@ -338,87 +340,52 @@ export function computeNeedsEstimate(context) {
   const riscos = new Set(context.riscos || []);
   const tipoLocal = context.tipoLocal || "comercio";
   const isEvento = tipoLocal === "evento";
+  const profile = getStateRuleProfile(context.uf || "SP");
+  const occ = getOccupancyProfile(tipoLocal, Array.from(riscos));
 
-  let extBase = Math.max(1, Math.ceil(area / (isEvento ? 250 : 200)));
+  if (occ.forceKitchen) riscos.add("cozinha");
+  const extFactorBase = isEvento ? Math.max(180, profile.extFactor - 20) : profile.extFactor;
+  let extBase = Math.max(1, Math.ceil(area / extFactorBase));
   if (lot >= 100) extBase += 1;
   if (lot >= 300) extBase += 1;
   if (pav >= 3) extBase += 1;
   if (riscos.has("inflamaveis")) extBase += 1;
   if (riscos.has("subsolo")) extBase += 1;
+  if (occ.extraExtCount) extBase += occ.extraExtCount;
 
-  const extClasses = [];
-  extClasses.push("A");
+  const extClasses = ["A"];
   extClasses.push(riscos.has("inflamaveis") || riscos.has("glp") || riscos.has("som_luz") ? "BC" : "ABC");
   if (riscos.has("cozinha")) extClasses.push("K");
+  (occ.extraExtClasses || []).forEach(c => extClasses.push(c));
   const extClassesUniq = Array.from(new Set(extClasses));
 
-  const hidranteNeeded = area >= 750 || pav >= 3 || altura >= 12 || lot >= 500 || riscos.has("subsolo");
-  const iluminacaoNeeded = isEvento || area >= 100 || pav > 1 || lot >= 50;
-  const sinalizacaoNeeded = isEvento || area >= 50 || pav > 1 || lot >= 30;
-  const alarmeNeeded = isEvento || lot >= 200 || area >= 400 || pav >= 3;
-  const brigadistas = estimateMinimumTeam({ tipoLocal, lot, area, pav, riskScore: (area >= 750 ? 60 : 35) + (riscos.has("glp") ? 12 : 0) + (riscos.has("cozinha") ? 10 : 0), palco: riscos.has("palco") });
+  const hidranteNeeded = !!(occ.preferHydrant || area >= profile.hydrantArea || pav >= 3 || altura >= 12 || lot >= profile.hydrantLot || riscos.has("subsolo"));
+  const iluminacaoNeeded = !!(occ.preferLight || isEvento || area >= profile.lightArea || pav > 1 || lot >= 50);
+  const sinalizacaoNeeded = !!(occ.preferSignage || isEvento || area >= profile.signageArea || pav > 1 || lot >= 30);
+  const alarmeNeeded = !!(occ.preferAlarm || isEvento || lot >= 200 || area >= profile.alarmArea || pav >= 3);
 
-  const confidence = Math.max(45, Math.min(92,
-    45
-    + (area ? 12 : 0)
-    + (lot ? 10 : 0)
-    + (pav ? 8 : 0)
-    + (context.ocupacao ? 8 : 0)
-    + ((context.riscos || []).length ? 9 : 0)
-  ));
+  const riskScoreBase = (area >= profile.hydrantArea ? 60 : 35)
+    + (riscos.has("glp") ? 12 : 0)
+    + (riscos.has("cozinha") ? 10 : 0)
+    + (riscos.has("inflamaveis") ? 12 : 0)
+    + (riscos.has("subsolo") ? 8 : 0)
+    + (occ.riskBias || 0);
+
+  const brigadistas = estimateMinimumTeam({ tipoLocal, lot, area, pav, riskScore: riskScoreBase, palco: riscos.has("palco") });
+  const confidence = Math.max(48, Math.min(94, 48 + (area ? 12 : 0) + (lot ? 10 : 0) + (pav ? 8 : 0) + (context.ocupacao ? 8 : 0) + ((Array.from(riscos)).length ? 9 : 0) + 4));
 
   const recommendations = [
-    {
-      key: "extintores",
-      title: "Extintores",
-      needed: true,
-      estimate: `${extBase} unidade(s) estimada(s)`,
-      details: `Classes sugeridas: ${extClassesUniq.join(", ")}. Distribuir em pontos de acesso e rotas.`,
-      confidence
-    },
-    {
-      key: "hidrantes",
-      title: "Hidrante",
-      needed: hidranteNeeded,
-      estimate: hidranteNeeded ? "Provável necessidade de sistema" : "Sem indicativo forte na estimativa inicial",
-      details: hidranteNeeded ? "Validar exigência pelo porte, altura, pavimentos e ocupação." : "Confirmar em análise técnica final.",
-      confidence: Math.max(40, confidence - 8)
-    },
-    {
-      key: "iluminacao",
-      title: "Iluminação de emergência",
-      needed: iluminacaoNeeded,
-      estimate: iluminacaoNeeded ? "Necessária na estimativa inicial" : "Avaliar conforme layout e rotas",
-      details: "Priorizar rotas de fuga, saídas e pontos críticos.",
-      confidence
-    },
-    {
-      key: "sinalizacao",
-      title: "Sinalização de saída",
-      needed: sinalizacaoNeeded,
-      estimate: sinalizacaoNeeded ? "Necessária na estimativa inicial" : "Avaliar conforme ocupação",
-      details: "Incluir saídas, rotas e equipamentos de emergência.",
-      confidence
-    },
-    {
-      key: "alarme",
-      title: "Alarme / acionamento",
-      needed: alarmeNeeded,
-      estimate: alarmeNeeded ? "Recomendado para este cenário" : "Sem indicativo forte na triagem inicial",
-      details: "Checar necessidade por lotação, área e operação do local.",
-      confidence: Math.max(38, confidence - 10)
-    },
-    {
-      key: "brigada",
-      title: "Brigadistas / equipe mínima",
-      needed: brigadistas > 0,
-      estimate: `${brigadistas} profissional(is) estimado(s)`,
-      details: isEvento ? "Separar por entrada, público e apoio operacional." : "Avaliar cobertura por turno e responsável local.",
-      confidence
-    }
+    { key: "ocupacao", title: "Enquadramento de ocupação", needed: true, estimate: occ.label, details: occ.notes || "Perfil usado para ajustar a estimativa automática.", rule: `${profile.label} · perfil operacional por ocupação`, confidence },
+    { key: "extintores", title: "Extintores", needed: true, estimate: `${extBase} unidade(s) estimada(s)`, details: `Classes sugeridas: ${extClassesUniq.join(", ")}. Distribuir em pontos de acesso e rotas.`, rule: `${profile.label} · estimativa por área, lotação, ocupação e riscos declarados`, confidence },
+    { key: "hidrantes", title: "Hidrante", needed: hidranteNeeded, estimate: hidranteNeeded ? "Provável necessidade de sistema" : "Sem indicativo forte na estimativa inicial", details: hidranteNeeded ? "Validar exigência pelo porte, altura, pavimentos, ocupação e armazenamento." : "Confirmar em análise técnica final.", rule: `${profile.label} · indicativo por área, altura, pavimentos, lotação e ocupação`, confidence: Math.max(40, confidence - 8) },
+    { key: "iluminacao", title: "Iluminação de emergência", needed: iluminacaoNeeded, estimate: iluminacaoNeeded ? "Necessária na estimativa inicial" : "Avaliar conforme layout e rotas", details: "Priorizar rotas de fuga, saídas e pontos críticos.", rule: `${profile.label} · rotas de fuga, saídas e circulação`, confidence },
+    { key: "sinalizacao", title: "Sinalização de saída", needed: sinalizacaoNeeded, estimate: sinalizacaoNeeded ? "Necessária na estimativa inicial" : "Avaliar conforme ocupação", details: "Incluir saídas, rotas e equipamentos de emergência.", rule: `${profile.label} · saídas, rotas, ocupação e equipamentos`, confidence },
+    { key: "alarme", title: "Alarme / acionamento", needed: alarmeNeeded, estimate: alarmeNeeded ? "Recomendado para este cenário" : "Sem indicativo forte na triagem inicial", details: "Checar necessidade por lotação, área, operação e perfil de ocupação.", rule: `${profile.label} · indicativo por lotação, área, operação e ocupação`, confidence: Math.max(38, confidence - 10) },
+    { key: "brigada", title: "Brigadistas / equipe mínima", needed: brigadistas > 0, estimate: `${brigadistas} profissional(is) estimado(s)`, details: isEvento ? "Separar por entrada, público e apoio operacional." : "Avaliar cobertura por turno e responsável local.", rule: `${profile.label} · estimativa operacional inicial por ocupação`, confidence }
   ];
 
   const checklistHints = [];
+  (occ.extraChecklist || []).forEach(t => checklistHints.push(t));
   if (hidranteNeeded) checklistHints.push("Incluir validação de hidrante ou sistema equivalente.");
   if (iluminacaoNeeded) checklistHints.push("Validar iluminação de emergência em rotas e saídas.");
   if (sinalizacaoNeeded) checklistHints.push("Validar sinalização de saída e de equipamentos.");
@@ -426,6 +393,8 @@ export function computeNeedsEstimate(context) {
   if (brigadistas) checklistHints.push(`Registrar equipe mínima estimada de ${brigadistas} profissional(is).`);
 
   return {
+    stateProfile: profile,
+    occupancyProfile: occ,
     recommendations,
     extintores: { quantidade: extBase, classes: extClassesUniq },
     hidrante: hidranteNeeded,
@@ -436,4 +405,46 @@ export function computeNeedsEstimate(context) {
     confidence,
     checklistHints
   };
+}
+
+
+
+
+export const STATE_RULE_PROFILES = {
+  SP: { name: "São Paulo", label: "CBPMESP · estimativa inicial", extFactor: 200, hydrantArea: 750, hydrantLot: 500, lightArea: 100, signageArea: 50, alarmArea: 400, note: "Base inicial para pré-vistoria em SP. Validar por ocupação e instruções técnicas aplicáveis." },
+  RJ: { name: "Rio de Janeiro", label: "CBMERJ · estimativa inicial", extFactor: 200, hydrantArea: 700, hydrantLot: 450, lightArea: 100, signageArea: 50, alarmArea: 350, note: "Leitura inicial para pré-vistoria no RJ. Confirmar conforme exigências locais." },
+  MG: { name: "Minas Gerais", label: "CBMMG · estimativa inicial", extFactor: 225, hydrantArea: 800, hydrantLot: 500, lightArea: 120, signageArea: 60, alarmArea: 450, note: "Estimativa inicial para MG com foco em triagem técnica." },
+  PR: { name: "Paraná", label: "CBMPR · estimativa inicial", extFactor: 200, hydrantArea: 750, hydrantLot: 500, lightArea: 100, signageArea: 50, alarmArea: 400, note: "Perfil inicial para PR. Validar conforme ocupação, área e carga de incêndio." },
+  SC: { name: "Santa Catarina", label: "CBMSC · estimativa inicial", extFactor: 220, hydrantArea: 800, hydrantLot: 500, lightArea: 120, signageArea: 60, alarmArea: 450, note: "Perfil inicial para SC. Confirmar em análise normativa local." },
+  BA: { name: "Bahia", label: "CBMBA · estimativa inicial", extFactor: 210, hydrantArea: 750, hydrantLot: 500, lightArea: 100, signageArea: 50, alarmArea: 400, note: "Perfil inicial para BA com foco em pré-vistoria comercial." }
+};
+
+export function getStateRuleProfile(uf = "SP") {
+  return STATE_RULE_PROFILES[uf] || STATE_RULE_PROFILES.SP;
+}
+
+export const OCCUPANCY_PROFILES = {
+  comercio: { label: "Comércio", riskBias: 0, extraChecklist: ["Validar saídas e sinalização", "Conferir extintores em rotas e acesso"], notes: "Perfil equilibrado para lojas e comércios em geral." },
+  restaurante: { label: "Restaurante", riskBias: 14, forceKitchen: true, extraExtClasses: ["K", "BC"], preferAlarm: true, extraChecklist: ["Validar coifa, exaustão e área de cocção", "Conferir GLP e extintor classe K", "Avaliar sinalização em área de salão e cozinha"], notes: "Operação com calor, óleo e GLP aumenta criticidade." },
+  igreja: { label: "Igreja / templo", riskBias: 10, preferSignage: true, extraChecklist: ["Avaliar fluxo de saída por lotação", "Conferir rotas desobstruídas e sinalização", "Validar iluminação de emergência no salão principal"], notes: "Lotações variáveis exigem foco em saída e circulação." },
+  galpao: { label: "Galpão / depósito", riskBias: 18, preferHydrant: true, extraExtCount: 1, extraChecklist: ["Avaliar carga de incêndio e armazenamento", "Conferir hidrantes ou sistema equivalente", "Validar acesso operacional e rotas internas"], notes: "Armazenamento e área ampla elevam a exigência de sistemas." },
+  evento: { label: "Evento", riskBias: 16, preferAlarm: true, preferSignage: true, extraChecklist: ["Validar entradas, saídas e fluxo do público", "Conferir brigadistas por operação", "Avaliar palco, energia e áreas de apoio"], notes: "Operação dinâmica com público demanda resposta reforçada." },
+  clinica: { label: "Clínica / saúde", riskBias: 12, preferLight: true, preferAlarm: true, extraChecklist: ["Avaliar evacuação assistida", "Validar iluminação e sinalização em rotas", "Conferir acessibilidade e circulação protegida"], notes: "Evacuação e permanência de pessoas com mobilidade reduzida elevam a atenção." },
+  escritorio: { label: "Escritório", riskBias: -6, extraChecklist: ["Conferir extintores e sinalização básica", "Validar iluminação em rotas e escadas"], notes: "Perfil de risco geralmente menor, com foco em abandono seguro." }
+};
+
+export function normalizeOccupancyKey(tipoLocal, riscos = []) {
+  const set = new Set(riscos || []);
+  if (tipoLocal === "evento") return "evento";
+  if (set.has("cozinha")) return "restaurante";
+  if (set.has("deposito") || set.has("inflamaveis") || set.has("subsolo")) return "galpao";
+  if (tipoLocal === "igreja") return "igreja";
+  if (tipoLocal === "clinica") return "clinica";
+  if (tipoLocal === "escritorio") return "escritorio";
+  return tipoLocal || "comercio";
+}
+
+export function getOccupancyProfile(tipoLocal, riscos = []) {
+  const key = normalizeOccupancyKey(tipoLocal, riscos);
+  return OCCUPANCY_PROFILES[key] || OCCUPANCY_PROFILES.comercio;
 }
