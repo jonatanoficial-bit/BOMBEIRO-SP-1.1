@@ -1,7 +1,10 @@
-VERSAO 3.0.5
+VERSAO 3.1.0
 
-Ajuste comercial da home
-- hero principal reescrito com linguagem mais vendável
-- benefícios rápidos adicionados na abertura
-- cards da home com foco em valor comercial, diagnóstico e operação
-- atualização de build na interface
+Fase 13 - Motor de recomendacao tecnica automatica
+- estimativa automatica do que o local provavelmente precisa
+- quantidade estimada de extintores e classes sugeridas
+- indicacao inicial de hidrante, iluminacao, sinalizacao e alarme
+- estimativa de brigadistas integrada
+- bloco de necessidades do local na nova vistoria
+- bloco de necessidades estimadas no checklist e no relatorio
+- checklist inicial refletindo as sugestoes automaticas

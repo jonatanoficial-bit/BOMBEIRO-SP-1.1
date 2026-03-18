@@ -328,3 +328,112 @@ function estimateMinimumTeam({ tipoLocal, lot, area, pav, riskScore, palco }) {
   if (palco) team += 1;
   return Math.max(1, team);
 }
+
+
+export function computeNeedsEstimate(context) {
+  const area = Number(context.area_m2 || 0);
+  const lot = Number(context.lotacao || 0);
+  const pav = Number(context.pavimentos || 1);
+  const altura = Number(context.altura_m || 0);
+  const riscos = new Set(context.riscos || []);
+  const tipoLocal = context.tipoLocal || "comercio";
+  const isEvento = tipoLocal === "evento";
+
+  let extBase = Math.max(1, Math.ceil(area / (isEvento ? 250 : 200)));
+  if (lot >= 100) extBase += 1;
+  if (lot >= 300) extBase += 1;
+  if (pav >= 3) extBase += 1;
+  if (riscos.has("inflamaveis")) extBase += 1;
+  if (riscos.has("subsolo")) extBase += 1;
+
+  const extClasses = [];
+  extClasses.push("A");
+  extClasses.push(riscos.has("inflamaveis") || riscos.has("glp") || riscos.has("som_luz") ? "BC" : "ABC");
+  if (riscos.has("cozinha")) extClasses.push("K");
+  const extClassesUniq = Array.from(new Set(extClasses));
+
+  const hidranteNeeded = area >= 750 || pav >= 3 || altura >= 12 || lot >= 500 || riscos.has("subsolo");
+  const iluminacaoNeeded = isEvento || area >= 100 || pav > 1 || lot >= 50;
+  const sinalizacaoNeeded = isEvento || area >= 50 || pav > 1 || lot >= 30;
+  const alarmeNeeded = isEvento || lot >= 200 || area >= 400 || pav >= 3;
+  const brigadistas = estimateMinimumTeam({ tipoLocal, lot, area, pav, riskScore: (area >= 750 ? 60 : 35) + (riscos.has("glp") ? 12 : 0) + (riscos.has("cozinha") ? 10 : 0), palco: riscos.has("palco") });
+
+  const confidence = Math.max(45, Math.min(92,
+    45
+    + (area ? 12 : 0)
+    + (lot ? 10 : 0)
+    + (pav ? 8 : 0)
+    + (context.ocupacao ? 8 : 0)
+    + ((context.riscos || []).length ? 9 : 0)
+  ));
+
+  const recommendations = [
+    {
+      key: "extintores",
+      title: "Extintores",
+      needed: true,
+      estimate: `${extBase} unidade(s) estimada(s)`,
+      details: `Classes sugeridas: ${extClassesUniq.join(", ")}. Distribuir em pontos de acesso e rotas.`,
+      confidence
+    },
+    {
+      key: "hidrantes",
+      title: "Hidrante",
+      needed: hidranteNeeded,
+      estimate: hidranteNeeded ? "Provável necessidade de sistema" : "Sem indicativo forte na estimativa inicial",
+      details: hidranteNeeded ? "Validar exigência pelo porte, altura, pavimentos e ocupação." : "Confirmar em análise técnica final.",
+      confidence: Math.max(40, confidence - 8)
+    },
+    {
+      key: "iluminacao",
+      title: "Iluminação de emergência",
+      needed: iluminacaoNeeded,
+      estimate: iluminacaoNeeded ? "Necessária na estimativa inicial" : "Avaliar conforme layout e rotas",
+      details: "Priorizar rotas de fuga, saídas e pontos críticos.",
+      confidence
+    },
+    {
+      key: "sinalizacao",
+      title: "Sinalização de saída",
+      needed: sinalizacaoNeeded,
+      estimate: sinalizacaoNeeded ? "Necessária na estimativa inicial" : "Avaliar conforme ocupação",
+      details: "Incluir saídas, rotas e equipamentos de emergência.",
+      confidence
+    },
+    {
+      key: "alarme",
+      title: "Alarme / acionamento",
+      needed: alarmeNeeded,
+      estimate: alarmeNeeded ? "Recomendado para este cenário" : "Sem indicativo forte na triagem inicial",
+      details: "Checar necessidade por lotação, área e operação do local.",
+      confidence: Math.max(38, confidence - 10)
+    },
+    {
+      key: "brigada",
+      title: "Brigadistas / equipe mínima",
+      needed: brigadistas > 0,
+      estimate: `${brigadistas} profissional(is) estimado(s)`,
+      details: isEvento ? "Separar por entrada, público e apoio operacional." : "Avaliar cobertura por turno e responsável local.",
+      confidence
+    }
+  ];
+
+  const checklistHints = [];
+  if (hidranteNeeded) checklistHints.push("Incluir validação de hidrante ou sistema equivalente.");
+  if (iluminacaoNeeded) checklistHints.push("Validar iluminação de emergência em rotas e saídas.");
+  if (sinalizacaoNeeded) checklistHints.push("Validar sinalização de saída e de equipamentos.");
+  checklistHints.push(`Conferir ${extBase} extintor(es) estimado(s) e classes ${extClassesUniq.join(", ")}.`);
+  if (brigadistas) checklistHints.push(`Registrar equipe mínima estimada de ${brigadistas} profissional(is).`);
+
+  return {
+    recommendations,
+    extintores: { quantidade: extBase, classes: extClassesUniq },
+    hidrante: hidranteNeeded,
+    iluminacao: iluminacaoNeeded,
+    sinalizacao: sinalizacaoNeeded,
+    alarme: alarmeNeeded,
+    brigadistas,
+    confidence,
+    checklistHints
+  };
+}

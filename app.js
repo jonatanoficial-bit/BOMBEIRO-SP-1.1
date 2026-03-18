@@ -1,12 +1,12 @@
 /* app.js - Bombeiro SP (Checklist + Relatório PDF via Print + Engine de Dimensionamento) */
 import { dbPutVistoria, dbListVistorias, dbDeleteVistoria, dbGetVistoria } from "./db.js";
-import { buildChecklist, PACK_INFO, computeSizing as packComputeSizing } from "./rules_sp_base.js";
+import { buildChecklist, PACK_INFO, computeSizing as packComputeSizing, computeNeedsEstimate } from "./rules_sp_base.js";
 import { runSizing } from "./rules_engine.js";
 
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 
-const BUILD_META = { version: '3.0.3', phase: '12C', build: '2026-03-13 09:35', progress: '100%' };
+const BUILD_META = { version: '3.1.0', phase: '13', build: '2026-03-13 11:35', progress: '100%' };
 
 function showToast(msg){
   const el = $("#toast");
@@ -174,6 +174,59 @@ function updateMapPreview(lat, lng, label='Local da vistoria'){
   `;
 }
 
+
+function getRecommendationPlan(context){
+  try {
+    return computeNeedsEstimate(context || {}) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function renderRequirementsPreview(plan){
+  const wrap = $("#requirementsPreview");
+  if (!wrap) return;
+  if (!plan || !plan.recommendations || !plan.recommendations.length){
+    wrap.innerHTML = "";
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="requirements-title">O que este local provavelmente precisa</div>
+    <div class="requirements-grid">
+      ${plan.recommendations.map(rec => `
+        <div class="req-card ${rec.needed ? "is-needed" : ""}">
+          <div class="req-head">
+            <strong>${escapeHtml(rec.title)}</strong>
+            <span>${rec.needed ? "Provável" : "Avaliar"}</span>
+          </div>
+          <div class="req-estimate">${escapeHtml(rec.estimate || "-")}</div>
+          <div class="req-detail">${escapeHtml(rec.details || "")}</div>
+        </div>
+      `).join("")}
+    </div>
+    <div class="requirements-confidence">Confiança da estimativa: ${escapeHtml(String(plan.confidence || "-"))}%</div>
+  `;
+}
+
+function renderAutoPlanBlock(plan){
+  if (!plan || !plan.recommendations || !plan.recommendations.length) return "";
+  return `
+    <div class="autoplan-card">
+      <div class="autoplan-title">Necessidades estimadas do local</div>
+      <div class="autoplan-grid">
+        ${plan.recommendations.map(rec => `
+          <article class="autoplan-item ${rec.needed ? "is-needed" : ""}">
+            <h4>${escapeHtml(rec.title)}</h4>
+            <div class="autoplan-estimate">${escapeHtml(rec.estimate || "-")}</div>
+            <p>${escapeHtml(rec.details || "")}</p>
+          </article>
+        `).join("")}
+      </div>
+      <div class="autoplan-note">Estimativa automática inicial para orientar a pré-vistoria. Confirmar em análise técnica final.</div>
+    </div>
+  `;
+}
+
 function collectNovaContext(){
   const tipoLocal = $("#tipoLocal")?.value?.trim() || '';
   const area_m2 = parseNumberSafe($("#area")?.value);
@@ -201,11 +254,13 @@ function updateNovaIntelligence(){
   if (!ctx.tipoLocal || !ctx.area_m2){
     info.textContent = 'Preencha tipo de local e área para gerar cálculo automático inicial.';
     preview.innerHTML = '';
+    renderRequirementsPreview(null);
     return;
   }
   const sizing = runSizing({ context: ctx, pack: { PACK_INFO, computeSizing: packComputeSizing } });
+  const plan = getRecommendationPlan(ctx);
   const risk = (sizing.results || []).find(r => r.id === 'metric_risk_score')?.value ?? '-';
-  const team = (sizing.results || []).find(r => r.id === 'metric_team')?.value ?? '-';
+  const team = plan?.brigadistas ?? ((sizing.results || []).find(r => r.id === 'metric_team')?.value ?? '-');
   const compliance = (sizing.results || []).find(r => r.id === 'metric_compliance_forecast')?.value ?? '-';
   const readiness = (sizing.results || []).find(r => r.id === 'metric_readiness')?.value ?? '-';
   metrics.innerHTML = `
@@ -214,14 +269,18 @@ function updateNovaIntelligence(){
     <div class="quick-metric"><span>Conformidade</span><strong>${compliance}/100</strong></div>
     <div class="quick-metric"><span>Prontidão</span><strong>${readiness}/100</strong></div>
   `;
-  info.textContent = `Análise inicial automática pronta para ${ctx.tipoLocal === 'evento' ? 'evento' : 'comércio'} com leitura técnica preliminar.`;
+  info.textContent = plan
+    ? `Estimativa automática pronta: ${plan.extintores.quantidade} extintor(es), ${plan.hidrante ? 'provável hidrante' : 'hidrante sem indicativo forte'}, ${plan.iluminacao ? 'iluminação' : 'iluminação a validar'}, ${plan.sinalizacao ? 'sinalização' : 'sinalização a validar'} e equipe mínima de ${plan.brigadistas}.`
+    : 'Análise inicial automática pronta.';
   const sections = buildChecklist({ tipoLocal: ctx.tipoLocal, riscos: ctx.riscos || [] });
   const list = [];
-  sections.slice(0,3).forEach(sec => sec.items.slice(0,2).forEach(it => list.push({ section: sec.title, title: it.title })));
+  (plan?.checklistHints || []).forEach(t => list.push({ section: 'Sugestão automática', title: t }));
+  sections.slice(0,2).forEach(sec => sec.items.slice(0,2).forEach(it => list.push({ section: sec.title, title: it.title })));
   preview.innerHTML = `
     <div class="checklist-preview-title">Checklist inicial sugerido</div>
-    ${list.slice(0,6).map(it => `<div class="checklist-preview-item"><b>${escapeHtml(it.section)}:</b> ${escapeHtml(it.title)}</div>`).join('')}
+    ${list.slice(0,8).map(it => `<div class="checklist-preview-item"><b>${escapeHtml(it.section)}:</b> ${escapeHtml(it.title)}</div>`).join('')}
   `;
+  renderRequirementsPreview(plan);
 }
 
 function getHashParams(){
@@ -404,7 +463,9 @@ $("#formNova").addEventListener("submit", async (e) => {
   const geoLat = parseNumberSafe($("#geoLat")?.value);
   const geoLng = parseNumberSafe($("#geoLng")?.value);
   const geoAccuracy = $("#geoAccuracy")?.value?.trim() || "";
-  const initialSizing = runSizing({ context: { tipoLocal, area_m2: area, pavimentos, altura_m: altura || 0, lotacao, riscos, ocupacao: tipoLocal === 'evento' ? 'evento' : 'comercio', horarioFuncionamento: 'variável', publicoPredominante: tipoLocal === 'evento' ? 'misto' : 'adulto', possuiCozinhaIndustrial: riscos.includes('cozinha'), possuiGLP: riscos.includes('glp'), possuiPalcoEstrutura: riscos.includes('palco') }, pack: { PACK_INFO, computeSizing: packComputeSizing } });
+  const initialContext = { tipoLocal, area_m2: area, pavimentos, altura_m: altura || 0, lotacao, riscos, ocupacao: tipoLocal === 'evento' ? 'evento' : 'comercio', horarioFuncionamento: 'variável', publicoPredominante: tipoLocal === 'evento' ? 'misto' : 'adulto', possuiCozinhaIndustrial: riscos.includes('cozinha'), possuiGLP: riscos.includes('glp'), possuiPalcoEstrutura: riscos.includes('palco') };
+  const initialSizing = runSizing({ context: initialContext, pack: { PACK_INFO, computeSizing: packComputeSizing } });
+  const initialPlan = getRecommendationPlan(initialContext);
 
   if (!tipoLocal){ showToast("[!] Informe o tipo do local."); markInvalid($("#tipoLocal")); return; }
   if (!nomeLocal){ showToast("[!] Informe o nome do local."); markInvalid($("#nomeLocal")); return; }
@@ -424,6 +485,7 @@ $("#formNova").addEventListener("submit", async (e) => {
     commercial: { clienteEmpresa, projetoNome, responsavelTecnico, contatoWhatsapp },
     checklist: { pack: PACK_INFO, answers: {}, lastSavedAt: now },
     sizing: { ...initialSizing, pack: PACK_INFO, computedAt: now, inputs: { origem: 'formulario-inicial', videoIntroResolution: '560x560' } },
+    autoPlan: initialPlan,
     relatorio: null
   };
 
@@ -570,6 +632,7 @@ async function loadChecklistView(id){
   currentSizing = savedSizing;
 
   renderChecklistUI(local, savedSizing.inputs || {});
+  if (savedSizing?.results?.length) renderSizingResult(savedSizing, v.autoPlan || getRecommendationPlan({ ...local, ...(savedSizing.inputs || {}), riscos: local.riscos || [] }));
   updateKpis();
   __lastSavedAt = v?.checklist?.lastSavedAt || null;
   setSaveHint(__lastSavedAt ? "saved" : null, __lastSavedAt ? `Salvo em ${formatDateTime(__lastSavedAt)}` : "Não salvo");
@@ -861,16 +924,18 @@ async function computeSizingNow(local){
   const pack = { PACK_INFO, computeSizing: packComputeSizing };
 
   const sizing = runSizing({ context, pack });
+  const autoPlan = getRecommendationPlan(context);
 
   const v = await dbGetVistoria(currentVistoriaId);
   if (!v) return;
 
   v.sizing = sizing;
+  v.autoPlan = autoPlan;
   v.updatedAt = Date.now();
   await dbPutVistoria(v);
   currentSizing = sizing;
 
-  renderSizingResult(sizing);
+  renderSizingResult(sizing, autoPlan);
   showToast("🧮 Recomendações atualizadas.");
 
   } finally {
@@ -883,7 +948,7 @@ function getSizingMetricValue(sizing, id){
   return item?.value ?? null;
 }
 
-function renderSizingResult(sizing){
+function renderSizingResult(sizing, autoPlan = null){
   const box = $("#dimResultadoBox");
   const hint = $("#dimHint");
   const wrap = $("#dimResultados");
@@ -935,6 +1000,7 @@ function renderSizingResult(sizing){
     `;
   }
 
+  const autoPlanHtml = autoPlan ? renderAutoPlanBlock(autoPlan) : "";
   const warnings = (sizing.warnings || []).map(w => `<div class="rep-item"><div class="rep-note">[!] ${escapeHtmlBr(w)}</div></div>`).join("");
 
   const results = (sizing.results || []).map(r => {
@@ -955,7 +1021,7 @@ function renderSizingResult(sizing){
     `;
   }).join("");
 
-  wrap.innerHTML = (warnings + results) || `<div class="rep-item"><div class="rep-note">Sem resultados.</div></div>`;
+  wrap.innerHTML = (autoPlanHtml + warnings + results) || `<div class="rep-item"><div class="rep-note">Sem resultados.</div></div>`;
 }
 
 /* ===== Persistência geral ===== */
@@ -1039,6 +1105,7 @@ async function loadRelatorioView(id){
   }
 
   const sizing = v.sizing || null;
+  const autoPlan = v.autoPlan || getRecommendationPlan({ ...local, ...(sizing?.inputs || {}), riscos: local.riscos || [] });
   const verification = buildVerificationPayload(v);
   const qrUri = buildPseudoQrDataUri(verification.payload);
   const geo = v.local?.geo || {};
@@ -1148,6 +1215,10 @@ async function loadRelatorioView(id){
         <div class="rep-note">${escapeHtmlBr(sizing.warnings.map(w => "• " + w).join("\n"))}</div>
       </div>
     `;
+  }
+
+  if (autoPlan?.recommendations?.length) {
+    dimBlock += `<div class="rep-item"><h4>O que este local provavelmente precisa</h4><div class="rep-note">${escapeHtmlBr(autoPlan.recommendations.map(rec => `• ${rec.title}: ${rec.estimate}. ${rec.details}`).join("\n"))}</div></div>`;
   }
 
   if (sizing?.results?.length) {

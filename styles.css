@@ -1153,3 +1153,17 @@ body.app-booting{overflow:hidden;}
   bottom:18px !important;
   z-index:10002 !important;
 }
+
+
+.requirements-preview{margin-top:14px}
+.requirements-title{font-weight:800;letter-spacing:.02em;margin-bottom:10px}
+.requirements-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.req-card,.autoplan-item{border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+.req-card.is-needed,.autoplan-item.is-needed{border-color:rgba(255,196,0,.35);box-shadow:0 0 0 1px rgba(255,196,0,.12) inset}
+.req-head{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}
+.req-head span{font-size:.8rem;opacity:.8}
+.req-estimate,.autoplan-estimate{font-size:1rem;font-weight:800;margin-bottom:6px}
+.req-detail,.requirements-confidence,.autoplan-item p,.autoplan-note{font-size:.92rem;opacity:.9}
+.autoplan-card{margin-bottom:14px;padding:14px;border-radius:20px;background:linear-gradient(180deg,rgba(255,196,0,.08),rgba(255,255,255,.03));border:1px solid rgba(255,196,0,.18)}
+.autoplan-title{font-weight:900;margin-bottom:10px;letter-spacing:.02em}
+.autoplan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
