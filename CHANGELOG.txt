@@ -1,6 +1,8 @@
-VERSAO 3.4.1
+VERSAO 3.4.2
 
-Ajustes comerciais e visuais
-- removido build duplicado na interface
-- texto reposicionado para linguagem comercial forte
-- melhoria do título principal
+Fase 16.2 - Correcao de deploy/cache e versao visivel
+- versao visivel atualizada em mais pontos da home
+- marcador forte de versao publicada
+- botao para atualizar versao e limpar cache
+- service worker refeito para forcar atualizacao
+- limpeza de cache antigo e claim imediato da nova build

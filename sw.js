@@ -1,51 +1,46 @@
-/* sw.js - Bombeiro SP (PWA Offline Completo) */
-const CACHE_V301_FIX_NAME = "bombeiro-cache-2026-03-12-2105";
+const CACHE_VERSION = 'bombeirosp-3.4.2-20260318-1245';
 const ASSETS = [
-  "./",
-  "./index.html",
-  "./styles.css",
-  "./app.js",
-  "./db.js",
-  "./rules_engine.js",
-  "./rules_sp_base.js",
-  "./rules_sp_oficial.js",
-  "./rules_rj_base.js",
-  "./rules_rj_oficial.js",
-  "./sp_tables.js",
-  "./rj_tables.js",
-  "./manifest.json",
-  "./icon.svg",
-  "./cover.svg",
-  "./assets/intro.mp4",
-  "./src/main.js",
-  "./src/config/build.js"
+  './',
+  './index.html',
+  './styles.css',
+  './app.js',
+  './db.js',
+  './rules_engine.js',
+  './rules_sp_base.js',
+  './manifest.json',
+  './icon.svg',
+  './cover.svg'
 ];
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_V301_FIX_NAME).then((cache) => cache.addAll(ASSETS)));
+self.addEventListener('install', event => {
   self.skipWaiting();
-});
-
-self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_V301_FIX_NAME).map((k) => caches.delete(k))))
+    caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))))
+      .then(() => caches.open(CACHE_VERSION))
+      .then(cache => cache.addAll(ASSETS.map(url => new Request(url, { cache: 'reload' }))))
   );
-  self.clients.claim();
 });
 
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  const req = event.request;
-  const url = new URL(req.url);
-  if (req.mode === "navigate") {
-    event.respondWith(fetch(req).catch(() => caches.match("./index.html")));
-    return;
-  }
-  event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req).then((response) => {
-      const clone = response.clone();
-      caches.open(CACHE_V301_FIX_NAME).then((cache) => cache.put(req, clone));
-      return response;
-    }).catch(() => caches.match("./index.html")))
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_VERSION).map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    fetch(event.request, { cache: 'no-store' })
+      .then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_VERSION).then(cache => cache.put(event.request, copy)).catch(() => {});
+        return response;
+      })
+      .catch(() => caches.match(event.request).then(resp => resp || caches.match('./')))
+  );
+});
+
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });

@@ -23,7 +23,7 @@
     <source src="./assets/intro.mp4" type="video/mp4">
   </video>
   <div class="intro-overlay-ui">
-    <div class="intro-brand-pill">BombeiroSP · Build 2026-03-12 21:05</div>
+    <div class="intro-brand-pill">BombeiroSP · Build 2026-03-18 12:45</div>
     
     <button class="btn btn-secondary intro-skip" id="btnSkipIntro">Pular introdução</button>
   </div>
@@ -71,7 +71,13 @@
             Plataforma profissional para pré-vistoria técnica com diagnóstico automático, relatório validável, QR verificável e operação completa em campo.
           </p>
 
-          <div class="hero-actions" style="margin-top:16px;">
+          
+          <div class="version-banner">
+            <div class="version-banner-kicker">VERSÃO PUBLICADA</div>
+            <div class="version-banner-main" data-build-marker>v3.4.2 · Fase 16.2 · Build 2026-03-18 12:45</div>
+            <button class="btn btn-secondary btn-sm" id="btnForceRefresh" type="button">Atualizar versão</button>
+          </div>
+<div class="hero-actions" style="margin-top:16px;">
             <button class="btn btn-primary btn-lg" id="btnNova" type="button" data-route="#/nova">✦ Nova vistoria</button>
             <button class="btn btn-secondary btn-lg" id="btnSalvas">◷ Vistorias salvas</button>
             <button class="btn btn-amber btn-lg" id="btnPacote">▣ Pacote SP</button>
@@ -100,11 +106,13 @@
           </div>
           <div class="build-panel" aria-label="Informacoes da build">
             <div class="build-kicker">BUILD ATIVA</div>
-            <div class="build-version">v3.0.0 · Fase 12</div>
-            <div class="build-meta">Build 2026-03-12 21:05 · Progresso do projeto 100%</div>
+            <div class="build-version">v3.4.2 · Fase 16.2</div>
+            <div class="build-meta">Build 2026-03-18 12:45 · Progresso do projeto 100%</div>
           </div>
         </div>
-      </section>
+      
+        <div class="footer-version-strong" data-build-marker>v3.4.2 · Fase 16.2 · Build 2026-03-18 12:45</div>
+</section>
 
       <section class="card section-shell">
         <div class="section-shell-head">
@@ -191,8 +199,8 @@
       </section>
 
       <div class="footer footer-premium">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span><br>
-        <span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-18 12:45 · v3.0.0 · Projeto 100%</span><br>
+        <span class="build-inline">Build 2026-03-18 12:45 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -380,7 +388,7 @@
       </form>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-18 12:45 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -400,7 +408,7 @@
       <div class="list" id="listaVistorias"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-18 12:45 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -455,7 +463,7 @@
       <div id="chkContent"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-18 12:45 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -475,7 +483,7 @@
       <div class="report" id="reportBox"></div>
 
       <div class="footer">
-        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-12 21:05 · v3.0.0 · Projeto 100%</span>
+        Criado por <strong>Jonatan Vale</strong> em parceria com <strong>Vale Produção</strong><br><span class="build-inline">Build 2026-03-18 12:45 · v3.0.0 · Projeto 100%</span>
       </div>
     </section>
 
@@ -500,6 +508,38 @@
   </div>
 
   <script type="module" src="./src/main.js"></script>
+
+
+<script>
+window.__forceRefreshVersion = function(){
+  try {
+    const go = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('v', '3.4.2-20260318-1245');
+      window.location.replace(url.toString());
+    };
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations()
+        .then(regs => Promise.all(regs.map(r => r.unregister())))
+        .finally(() => {
+          if (window.caches) {
+            caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).finally(go);
+          } else {
+            go();
+          }
+        });
+    } else {
+      go();
+    }
+  } catch(e) {
+    window.location.reload();
+  }
+};
+document.addEventListener('click', function(e){
+  const t = e.target;
+  if (t && t.id === 'btnForceRefresh') window.__forceRefreshVersion();
+});
+</script>
 
 </body>
 </html>

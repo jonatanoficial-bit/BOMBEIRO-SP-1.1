@@ -6,7 +6,16 @@ import { runSizing } from "./rules_engine.js";
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 
-const BUILD_META = { version: '3.4.1', phase: '16.1', build: '2026-03-18 12:10', progress: '100%' };
+const BUILD_META = { version: '3.4.2', phase: '16.2', build: '2026-03-18 12:45', progress: '100%' };
+
+
+function applyVisibleBuildMarkers(){
+  const markers = document.querySelectorAll("[data-build-marker]");
+  markers.forEach(el => {
+    el.textContent = `v${BUILD_META.version} · Fase ${BUILD_META.phase} · Build ${BUILD_META.build}`;
+  });
+  try { document.title = `BombeiroSP v${BUILD_META.version}`; } catch(e){}
+}
 
 function showToast(msg){
   const el = $("#toast");
@@ -1419,3 +1428,5 @@ window.addEventListener("DOMContentLoaded", () => {
   handleRoute();
   ensureNovaViewReady();
 });
+
+document.addEventListener('DOMContentLoaded', () => { try { applyVisibleBuildMarkers(); } catch(e){} });
