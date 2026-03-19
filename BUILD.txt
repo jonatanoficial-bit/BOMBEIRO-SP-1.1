@@ -1,5 +1,5 @@
 Projeto: BombeiroSP
-Versão: 3.4.0
-Fase: 16 - Cálculo por área setorizada e carga de incêndio
-Build: 2026-03-18 11:35
+Versão: 3.4.1
+Fase: 16.1 - Ajuste visual e comercial
+Build: 2026-03-18 12:10
 Progresso: 100%

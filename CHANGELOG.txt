@@ -1,9 +1,6 @@
-VERSAO 3.4.0
+VERSAO 3.4.1
 
-Fase 16 - Calculo por area setorizada e carga de incendio
-- campos para area de atendimento, deposito e cozinha
-- selecao de carga de incendio baixa, media ou alta
-- estimativa automatica mais precisa por setor
-- extintores agora consideram atendimento, deposito e cozinha
-- hidrante e alarme ajustados por armazenamento e carga
-- checklist inicial reforcado por setores internos
+Ajustes comerciais e visuais
+- removido build duplicado na interface
+- texto reposicionado para linguagem comercial forte
+- melhoria do título principal

@@ -6,7 +6,7 @@ import { runSizing } from "./rules_engine.js";
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 
-const BUILD_META = { version: '3.4.0', phase: '16', build: '2026-03-18 11:35', progress: '100%' };
+const BUILD_META = { version: '3.4.1', phase: '16.1', build: '2026-03-18 12:10', progress: '100%' };
 
 function showToast(msg){
   const el = $("#toast");
