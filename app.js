@@ -6,7 +6,7 @@ import { runSizing } from "./rules_engine.js";
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 
-const BUILD_META = { version: '3.4.2', phase: '16.2', build: '2026-03-18 12:45', progress: '100%' };
+const BUILD_META = { version:'3.7.0', phase:'19', build:'2026-03-18 15:08', progress:'100%' };
 
 
 function applyVisibleBuildMarkers(){
@@ -268,6 +268,7 @@ function updateNovaIntelligence(){
     info.textContent = 'Preencha tipo de local e área para gerar cálculo automático inicial.';
     preview.innerHTML = '';
     renderRequirementsPreview(null);
+    renderInspectionFlow(ctx, null);
     return;
   }
   const sizing = runSizing({ context: ctx, pack: { PACK_INFO, computeSizing: packComputeSizing } });
@@ -294,6 +295,152 @@ function updateNovaIntelligence(){
     ${list.slice(0,8).map(it => `<div class="checklist-preview-item"><b>${escapeHtml(it.section)}:</b> ${escapeHtml(it.title)}</div>`).join('')}
   `;
   renderRequirementsPreview(plan);
+  renderInspectionFlow(ctx, plan);
+}
+
+
+function getInspectionFlowState(ctx, plan){
+  const checks = {
+    local: !!(ctx.tipoLocal && ($("#nomeLocal")?.value?.trim()) && ($("#endereco")?.value?.trim())),
+    tecnico: !!(ctx.area_m2 && ctx.pavimentos),
+    risco: !!((ctx.riscos || []).length || ctx.tipoLocal),
+    geo: !!($("#geoLat")?.value && $("#geoLng")?.value),
+    estimativa: !!(plan && plan.recommendations && plan.recommendations.length)
+  };
+  return checks;
+}
+
+function renderInspectionFlow(ctx, plan){
+  const wrap = $("#inspectionFlow");
+  const next = $("#inspectionNextAction");
+  if (!wrap || !next) return;
+
+  const state = getInspectionFlowState(ctx || {}, plan);
+  const steps = [
+    { key: "local", title: "1. Identificação do local", desc: "Definir tipo, nome e endereço da vistoria." },
+    { key: "tecnico", title: "2. Dados técnicos", desc: "Área, pavimentos, altura e lotação." },
+    { key: "risco", title: "3. Riscos e cenários", desc: "Riscos especiais, operação e setores críticos." },
+    { key: "geo", title: "4. Geolocalização", desc: "Registrar posição para mapa e relatório." },
+    { key: "estimativa", title: "5. Estimativa automática", desc: "Gerar o que o local provavelmente precisa." }
+  ];
+
+  wrap.innerHTML = steps.map(step => `
+    <div class="flow-step ${state[step.key] ? "is-done" : "is-pending"}">
+      <div class="flow-step-head">
+        <strong>${step.title}</strong>
+        <span>${state[step.key] ? "Concluído" : "Pendente"}</span>
+      </div>
+      <div class="flow-step-desc">${step.desc}</div>
+    </div>
+  `).join("");
+
+  let msg = "Preencha os dados iniciais para iniciar a vistoria guiada.";
+  if (!state.local) msg = "Próxima ação: informar tipo, nome e endereço do local.";
+  else if (!state.tecnico) msg = "Próxima ação: preencher área, pavimentos e lotação para cálculo inicial.";
+  else if (!state.risco) msg = "Próxima ação: marcar riscos e características operacionais do local.";
+  else if (!state.geo) msg = "Próxima ação: capturar geolocalização para mapa e relatório.";
+  else if (!state.estimativa) msg = "Próxima ação: revisar os dados para gerar a estimativa automática.";
+  else msg = "Fluxo inicial concluído. Salve a vistoria e siga para o checklist técnico.";
+
+  next.innerHTML = `<div class="next-action-card"><strong>Próxima ação recomendada</strong><div>${msg}</div></div>`;
+}
+
+
+function classifyPriorityFromPlan(plan){
+  const priorities = { critica: [], alta: [], media: [], baixa: [] };
+  if (!plan?.recommendations?.length) return priorities;
+
+  for (const rec of plan.recommendations){
+    const title = rec.title || "Item";
+    const text = `${rec.estimate || ""} ${rec.details || ""}`.toLowerCase();
+    let level = "baixa";
+
+    if (rec.key === "hidrantes" && rec.needed) level = "alta";
+    if (rec.key === "alarme" && rec.needed) level = "alta";
+    if (rec.key === "brigada" && rec.needed && String(rec.estimate || "").match(/[1-9]/)) level = "alta";
+    if (rec.key === "iluminacao" && rec.needed) level = "media";
+    if (rec.key === "sinalizacao" && rec.needed) level = "media";
+    if (rec.key === "extintores") level = "media";
+    if (text.includes("subsolo") || text.includes("armazenamento") || text.includes("carga de incêndio")) level = "alta";
+    if (text.includes("evacuação") || text.includes("rota de fuga")) level = "critica";
+
+    priorities[level].push({
+      title,
+      estimate: rec.estimate || "",
+      details: rec.details || ""
+    });
+  }
+  return priorities;
+}
+
+function buildPrioritySummary(plan){
+  const priorities = classifyPriorityFromPlan(plan);
+  const total = priorities.critica.length + priorities.alta.length + priorities.media.length + priorities.baixa.length;
+  const headline =
+    priorities.critica.length ? "Há pendências críticas para ação imediata." :
+    priorities.alta.length ? "Há pendências altas que devem entrar na proposta de adequação." :
+    priorities.media.length ? "Há pendências médias para tratamento planejado." :
+    "Sem pendências relevantes na leitura inicial.";
+
+  return {
+    total,
+    headline,
+    buckets: priorities
+  };
+}
+
+function renderPrioritySummary(plan){
+  const wrap = $("#prioritySummary");
+  if (!wrap) return;
+  if (!plan?.recommendations?.length){
+    wrap.innerHTML = "";
+    return;
+  }
+  const summary = buildPrioritySummary(plan);
+  const order = [
+    ["critica", "Crítica"],
+    ["alta", "Alta"],
+    ["media", "Média"],
+    ["baixa", "Baixa"]
+  ];
+  wrap.innerHTML = `
+    <div class="priority-card">
+      <div class="priority-head">
+        <strong>Pendências e prioridades automáticas</strong>
+        <span>${summary.total} item(ns)</span>
+      </div>
+      <div class="priority-headline">${summary.headline}</div>
+      <div class="priority-grid">
+        ${order.map(([key,label]) => `
+          <div class="priority-col priority-${key}">
+            <div class="priority-col-title">${label}</div>
+            ${summary.buckets[key].length ? summary.buckets[key].map(item => `
+              <div class="priority-item">
+                <strong>${escapeHtml(item.title)}</strong>
+                <div>${escapeHtml(item.estimate)}</div>
+              </div>
+            `).join("") : `<div class="priority-empty">Sem itens</div>`}
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderPriorityLaudoBlock(plan){
+  if (!plan?.recommendations?.length) return "";
+  const summary = buildPrioritySummary(plan);
+  const block = [];
+  for (const [key,label] of [["critica","Crítica"],["alta","Alta"],["media","Média"],["baixa","Baixa"]]){
+    if (!summary.buckets[key].length) continue;
+    block.push(`${label}: ${summary.buckets[key].map(i => `${i.title} — ${i.estimate}`).join("; ")}`);
+  }
+  return `
+    <div class="rep-item">
+      <h4>Pendências priorizadas</h4>
+      <div class="rep-note">${escapeHtmlBr(block.join("\n"))}</div>
+    </div>
+  `;
 }
 
 function getHashParams(){
@@ -503,6 +650,17 @@ $("#formNova").addEventListener("submit", async (e) => {
     checklist: { pack: PACK_INFO, answers: {}, lastSavedAt: now },
     sizing: { ...initialSizing, pack: PACK_INFO, computedAt: now, inputs: { origem: 'formulario-inicial', videoIntroResolution: '560x560' } },
     autoPlan: initialPlan,
+    priorityPlan: initialPlan ? buildPrioritySummary(initialPlan) : null,
+    guidedFlow: {
+      version: '17',
+      summary: {
+        identificacao: !!(tipoLocal && nomeLocal && endereco),
+        tecnico: !!(area && pavimentos),
+        riscos: !!riscos.length,
+        geolocalizacao: !!(geoLat && geoLng),
+        estimativa: !!(initialPlan?.recommendations?.length)
+      }
+    },
     relatorio: null
   };
 
@@ -948,6 +1106,7 @@ async function computeSizingNow(local){
 
   v.sizing = sizing;
   v.autoPlan = autoPlan;
+  v.priorityPlan = autoPlan ? buildPrioritySummary(autoPlan) : null;
   v.updatedAt = Date.now();
   await dbPutVistoria(v);
   currentSizing = sizing;
@@ -1430,3 +1589,20 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => { try { applyVisibleBuildMarkers(); } catch(e){} });
+
+
+function buildCommercialProposal(plan){
+ if(!plan?.recommendations) return null;
+ return {
+  items: plan.recommendations.map(r=>({title:r.title,qty:r.estimate||""}))
+ };
+}
+
+function renderProposalSummary(plan){
+ const el=document.getElementById("proposalSummary");
+ if(!el||!plan) return;
+ const p=buildCommercialProposal(plan);
+ if(!p) return;
+ el.innerHTML='<div class="proposal-card"><strong>Proposta automática</strong>'+
+ p.items.map(i=>'<div>'+i.title+' - '+i.qty+'</div>').join('')+'</div>';
+}

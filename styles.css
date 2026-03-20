@@ -1178,3 +1178,37 @@ body.app-booting{overflow:hidden;}
 .version-banner-main,.footer-version-strong{font-size:1rem;font-weight:900;color:#fff4b0}
 .footer-version-strong{margin-top:18px;text-align:center}
 .btn-sm{margin-top:10px;padding:10px 14px;font-size:.92rem}
+
+
+.guided-card{margin-top:14px}
+.inspection-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:10px}
+.flow-step{padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02))}
+.flow-step.is-done{border-color:rgba(70,190,120,.34);box-shadow:0 0 0 1px rgba(70,190,120,.16) inset}
+.flow-step.is-pending{border-color:rgba(255,196,0,.20)}
+.flow-step-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+.flow-step-head span{font-size:.82rem;opacity:.9}
+.flow-step-desc{font-size:.92rem;opacity:.9}
+.inspection-next-action{margin-top:12px}
+.next-action-card{padding:14px 16px;border-radius:18px;border:1px solid rgba(255,196,0,.24);background:linear-gradient(180deg,rgba(255,196,0,.10),rgba(255,255,255,.03))}
+.next-action-card strong{display:block;margin-bottom:6px}
+
+
+.priority-summary{margin-top:14px}
+.priority-card{padding:14px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+.priority-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+.priority-headline{font-weight:800;margin-bottom:12px;color:#fff4b0}
+.priority-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.priority-col{padding:12px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+.priority-col-title{font-weight:900;margin-bottom:8px}
+.priority-critica{border-color:rgba(255,90,90,.35)}
+.priority-alta{border-color:rgba(255,156,51,.35)}
+.priority-media{border-color:rgba(255,208,0,.28)}
+.priority-baixa{border-color:rgba(120,170,255,.28)}
+.priority-item{padding:8px 0;border-top:1px dashed rgba(255,255,255,.08)}
+.priority-item:first-child{border-top:0;padding-top:0}
+.priority-item strong{display:block;margin-bottom:4px}
+.priority-empty{opacity:.7}
+@media (max-width:900px){.priority-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.priority-grid{grid-template-columns:1fr}}
+
+.proposal-card{padding:10px;border:1px solid #555;margin-top:10px}

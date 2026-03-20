@@ -1,5 +1,4 @@
-Projeto: BombeiroSP
-Versão: 3.4.2
-Fase: 16.2 - Correção de deploy/cache e versão visível
-Build: 2026-03-18 12:45
-Progresso: 100%
+Versão 3.7.0
+Build 2026-03-18 15:08
+Fase 19
+100%

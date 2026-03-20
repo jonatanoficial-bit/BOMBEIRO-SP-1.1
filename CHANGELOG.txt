@@ -1,8 +1,1 @@
-VERSAO 3.4.2
-
-Fase 16.2 - Correcao de deploy/cache e versao visivel
-- versao visivel atualizada em mais pontos da home
-- marcador forte de versao publicada
-- botao para atualizar versao e limpar cache
-- service worker refeito para forcar atualizacao
-- limpeza de cache antigo e claim imediato da nova build
+Proposta automática adicionada
