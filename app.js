@@ -6,7 +6,7 @@ import { runSizing } from "./rules_engine.js";
 function $(sel){ return document.querySelector(sel); }
 function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
 
-const BUILD_META = { version:'3.7.0', phase:'19', build:'2026-03-18 15:08', progress:'100%' };
+const BUILD_META = { version:'4.1.0', phase:'23', build:'2026-03-20 12:08', progress:'100%' };
 
 
 function applyVisibleBuildMarkers(){
@@ -651,6 +651,7 @@ $("#formNova").addEventListener("submit", async (e) => {
     sizing: { ...initialSizing, pack: PACK_INFO, computedAt: now, inputs: { origem: 'formulario-inicial', videoIntroResolution: '560x560' } },
     autoPlan: initialPlan,
     priorityPlan: initialPlan ? buildPrioritySummary(initialPlan) : null,
+    commercialProposal: initialPlan ? buildCommercialProposal(initialPlan) : null,
     guidedFlow: {
       version: '17',
       summary: {
@@ -1107,6 +1108,7 @@ async function computeSizingNow(local){
   v.sizing = sizing;
   v.autoPlan = autoPlan;
   v.priorityPlan = autoPlan ? buildPrioritySummary(autoPlan) : null;
+  v.commercialProposal = autoPlan ? buildCommercialProposal(autoPlan) : null;
   v.updatedAt = Date.now();
   await dbPutVistoria(v);
   currentSizing = sizing;
@@ -1588,21 +1590,286 @@ window.addEventListener("DOMContentLoaded", () => {
   ensureNovaViewReady();
 });
 
-document.addEventListener('DOMContentLoaded', () => { try { applyVisibleBuildMarkers(); } catch(e){} });
+document.addEventListener('DOMContentLoaded', () => { try { applyVisibleBuildMarkers(); } catch(e){} try { initSignaturePad(); } catch(e){} });
 
+
+
+function moneyBRL(v){
+  const n = Number(v || 0);
+  return n.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+}
 
 function buildCommercialProposal(plan){
- if(!plan?.recommendations) return null;
- return {
-  items: plan.recommendations.map(r=>({title:r.title,qty:r.estimate||""}))
- };
+  if (!plan?.recommendations?.length) return null;
+
+  const pricing = {
+    "Enquadramento de ocupação": { unit: 0, category: "diagnostico" },
+    "Leitura por setores": { unit: 0, category: "diagnostico" },
+    "Extintores": { unit: 280, category: "equipamento" },
+    "Hidrante": { unit: 4800, category: "sistema" },
+    "Iluminação de emergência": { unit: 180, category: "sistema" },
+    "Sinalização de saída": { unit: 65, category: "sistema" },
+    "Alarme / acionamento": { unit: 2200, category: "sistema" },
+    "Brigadistas / equipe mínima": { unit: 350, category: "servico" }
+  };
+
+  const items = [];
+  let subtotal = 0;
+
+  for (const rec of plan.recommendations){
+    if (rec.key === "ocupacao" || rec.key === "setorizacao") continue;
+    const price = pricing[rec.title] || { unit: 0, category: "outro" };
+
+    let qty = 1;
+    const est = String(rec.estimate || "");
+    const m = est.match(/(\d+)/);
+    if (m) qty = Math.max(1, Number(m[1]));
+
+    if (rec.title === "Hidrante" || rec.title === "Alarme / acionamento") qty = rec.needed ? 1 : 0;
+    if (rec.title === "Iluminação de emergência" || rec.title === "Sinalização de saída") qty = rec.needed ? Math.max(1, qty) : 0;
+
+    const total = qty * price.unit;
+    subtotal += total;
+
+    items.push({
+      title: rec.title,
+      qty,
+      unit: price.unit,
+      total,
+      estimate: rec.estimate || "",
+      note: rec.details || "",
+      category: price.category
+    });
+  }
+
+  const serviceFee = subtotal > 0 ? Math.round(subtotal * 0.12) : 0;
+  const totalGeral = subtotal + serviceFee;
+
+  return {
+    items,
+    subtotal,
+    serviceFee,
+    totalGeral,
+    totalItems: items.filter(i => i.qty > 0).length,
+    description: "Proposta automática inicial baseada nas necessidades estimadas da vistoria. Valores orientativos para composição comercial."
+  };
 }
 
 function renderProposalSummary(plan){
- const el=document.getElementById("proposalSummary");
- if(!el||!plan) return;
- const p=buildCommercialProposal(plan);
- if(!p) return;
- el.innerHTML='<div class="proposal-card"><strong>Proposta automática</strong>'+
- p.items.map(i=>'<div>'+i.title+' - '+i.qty+'</div>').join('')+'</div>';
+  const el = document.getElementById("proposalSummary");
+  const actions = document.getElementById("proposalActions");
+  if (!el) return;
+  const proposal = buildCommercialProposal(plan);
+  if (!proposal){
+    el.innerHTML = "";
+    if (actions) actions.innerHTML = "";
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="proposal-card">
+      <div class="proposal-head">
+        <strong>Proposta automática de adequação</strong>
+        <span>${proposal.totalItems} item(ns)</span>
+      </div>
+      <div class="proposal-desc">${proposal.description}</div>
+      <div class="proposal-list">
+        ${proposal.items.filter(i => i.qty > 0).map(i => `
+          <div class="proposal-item">
+            <div class="proposal-item-main">
+              <strong>${escapeHtml(i.title)}</strong>
+              <small>${escapeHtml(i.estimate)}</small>
+            </div>
+            <div class="proposal-item-price">
+              <span>${i.qty}x</span>
+              <b>${moneyBRL(i.total)}</b>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="proposal-totals">
+        <div><span>Subtotal estimado</span><strong>${moneyBRL(proposal.subtotal)}</strong></div>
+        <div><span>Taxa técnica / implantação</span><strong>${moneyBRL(proposal.serviceFee)}</strong></div>
+        <div class="grand"><span>Total estimado</span><strong>${moneyBRL(proposal.totalGeral)}</strong></div>
+      </div>
+    </div>
+  `;
+
+  if (actions){
+    actions.innerHTML = `
+      <div class="proposal-actions-card">
+        <button type="button" class="btn btn-amber" id="btnCopiarProposta">Copiar proposta</button>
+        <button type="button" class="btn btn-secondary" id="btnPrintProposal">Imprimir proposta</button>
+      </div>
+    `;
+  }
+
+  const copyBtn = document.getElementById("btnCopiarProposta");
+  if (copyBtn){
+    copyBtn.onclick = async () => {
+      const text = [
+        "PROPOSTA AUTOMÁTICA DE ADEQUAÇÃO",
+        "",
+        ...proposal.items.filter(i => i.qty > 0).map(i => `- ${i.title}: ${i.qty}x · ${moneyBRL(i.total)}`),
+        "",
+        `Subtotal: ${moneyBRL(proposal.subtotal)}`,
+        `Taxa técnica / implantação: ${moneyBRL(proposal.serviceFee)}`,
+        `Total estimado: ${moneyBRL(proposal.totalGeral)}`
+      ].join("\n");
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("[OK] Proposta copiada.");
+      } catch(e) {
+        showToast("[!] Não foi possível copiar a proposta.");
+      }
+    };
+  }
+
+  const printBtn = document.getElementById("btnPrintProposal");
+  if (printBtn){
+    printBtn.onclick = () => window.print();
+  }
+}
+
+function renderCommercialProposalBlock(plan){
+  const proposal = buildCommercialProposal(plan);
+  if (!proposal) return "";
+  return `
+    <div class="rep-item">
+      <h4>Proposta automática de adequação</h4>
+      <div class="rep-note">
+        ${escapeHtmlBr(proposal.items.filter(i => i.qty > 0).map(i => `• ${i.title}: ${i.qty}x · ${moneyBRL(i.total)}`).join("\n"))}
+        <br><br>
+        <b>Subtotal:</b> ${moneyBRL(proposal.subtotal)}<br>
+        <b>Taxa técnica / implantação:</b> ${moneyBRL(proposal.serviceFee)}<br>
+        <b>Total estimado:</b> ${moneyBRL(proposal.totalGeral)}
+      </div>
+    </div>
+  `;
+}
+
+
+
+function renderProposalEditor(plan){
+ const el=document.getElementById("proposalEditor");
+ if(!el||!plan?.items) return;
+ el.innerHTML='<div class="proposal-edit-card"><strong>Editar proposta</strong>'+
+ plan.items.map((i,idx)=>`
+  <div class="edit-line">
+    <span>${i.title}</span>
+    <input type="number" value="${i.qty}" data-idx="${idx}">
+  </div>`).join("")+
+ '</div>';
+
+ el.querySelectorAll("input").forEach(inp=>{
+   inp.onchange=()=>{
+     const idx=Number(inp.dataset.idx);
+     plan.items[idx].qty=Number(inp.value);
+   };
+ });
+}
+
+function approveProposal(){
+ const n=document.getElementById('clientName')?.value||'Cliente';
+ const s=document.getElementById('approvalStatus');
+ const data = persistProposalApproval(n);
+ if(s)s.innerHTML='Proposta aprovada por '+data.cliente+' em '+new Date(data.data).toLocaleString('pt-BR');
+}
+document.addEventListener('click',e=>{if(e.target?.id==='btnApproveProposal'){approveProposal();}});
+function initSignaturePad(){
+  const canvas = document.getElementById("signaturePad");
+  const status = document.getElementById("signatureStatus");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+  let lastX = 0, lastY = 0;
+
+  function repaintBackground(){
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }
+
+  function restoreSaved(){
+    const saved = localStorage.getItem("approvedProposalSignature");
+    if (saved){
+      const img = new Image();
+      img.onload = function(){ repaintBackground(); ctx.drawImage(img,0,0,canvas.width,canvas.height); };
+      img.src = saved;
+      if (status) status.textContent = "Assinatura salva e pronta para o PDF.";
+    } else {
+      repaintBackground();
+    }
+  }
+
+  function point(e){
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches && e.touches[0] ? e.touches[0] : null;
+    const x = (t ? t.clientX : e.clientX) - rect.left;
+    const y = (t ? t.clientY : e.clientY) - rect.top;
+    return {x,y};
+  }
+
+  function start(e){
+    drawing = true;
+    const p = point(e);
+    lastX = p.x; lastY = p.y;
+    e.preventDefault && e.preventDefault();
+  }
+  function move(e){
+    if (!drawing) return;
+    const p = point(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+    e.preventDefault && e.preventDefault();
+  }
+  function end(e){
+    drawing = false;
+    e.preventDefault && e.preventDefault();
+  }
+
+  repaintBackground();
+  restoreSaved();
+
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", end);
+  canvas.addEventListener("touchstart", start, {passive:false});
+  canvas.addEventListener("touchmove", move, {passive:false});
+  window.addEventListener("touchend", end, {passive:false});
+
+  document.getElementById("btnClearSignature")?.addEventListener("click", function(){
+    localStorage.removeItem("approvedProposalSignature");
+    repaintBackground();
+    if (status) status.textContent = "Assinatura removida.";
+  });
+
+  document.getElementById("btnSaveSignature")?.addEventListener("click", function(){
+    try{
+      localStorage.setItem("approvedProposalSignature", canvas.toDataURL("image/png"));
+      if (status) status.textContent = "Assinatura salva e pronta para o PDF.";
+      showToast("[OK] Assinatura salva.");
+    }catch(e){
+      showToast("[!] Não foi possível salvar a assinatura.");
+    }
+  });
+
+  document.getElementById("btnWhatsProposal")?.addEventListener("click", function(){
+    let approved = {};
+    try { approved = JSON.parse(localStorage.getItem("approvedProposal") || "{}"); } catch(e) {}
+    const text = encodeURIComponent("Proposta aprovada\nCliente: " + (approved.cliente || "Cliente") + "\nData: " + (approved.data || "") + "\nVersão: " + BUILD_META.version);
+    window.open("https://wa.me/?text=" + text, "_blank");
+  });
+}
+
+function persistProposalApproval(cliente){
+  const data = { cliente: cliente || "Cliente", data: new Date().toISOString(), versao: BUILD_META.version };
+  localStorage.setItem("approvedProposal", JSON.stringify(data));
+  return data;
 }

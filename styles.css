@@ -1212,3 +1212,33 @@ body.app-booting{overflow:hidden;}
 @media (max-width:560px){.priority-grid{grid-template-columns:1fr}}
 
 .proposal-card{padding:10px;border:1px solid #555;margin-top:10px}
+
+.proposal-summary{margin-top:14px}
+.proposal-card{padding:16px;border-radius:20px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+.proposal-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+.proposal-desc{margin-bottom:12px;font-weight:600;color:#ffd54a}
+.proposal-list{display:grid;gap:8px}
+.proposal-item{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px dashed rgba(255,255,255,.08)}
+.proposal-item:first-child{border-top:0}
+.proposal-item-main{display:flex;flex-direction:column;gap:4px}
+.proposal-item-main small{opacity:.8}
+.proposal-item-price{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.proposal-totals{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);display:grid;gap:8px}
+.proposal-totals div{display:flex;justify-content:space-between;gap:12px}
+.proposal-totals .grand{font-size:1.04rem;font-weight:900;color:#fff4b0}
+.proposal-actions-card{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.proposal-pdf-note{margin-top:10px;font-size:.9rem;opacity:.8}
+
+.proposal-edit-card{margin-top:10px;padding:10px;border:1px solid #666}
+.edit-line{display:flex;justify-content:space-between;margin-top:6px}
+.proposal-approval{margin-top:10px;padding:10px;border:1px solid #888}
+.proposal-approval input{margin-right:6px}
+
+.signature-block{margin-top:12px;padding:14px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+.signature-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
+#signaturePad{display:block;width:100%;height:180px;border-radius:14px;border:1px dashed rgba(255,255,255,.18);background:#111}
+.signature-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.signature-status{margin-top:10px;font-size:.92rem;opacity:.86}
+.signature-report img{max-width:100%;height:auto;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:#111}
+.proposal-approval{margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(255,255,255,.03)}
+.proposal-approval input{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#111;color:#fff;margin-right:8px}

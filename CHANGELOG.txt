@@ -1,1 +1,8 @@
-Proposta automática adicionada
+VERSAO 4.1.0
+
+Fase 23 - Assinatura digital e envio da proposta
+- canvas de assinatura do cliente
+- salvar e limpar assinatura
+- aprovação comercial persistida
+- botão para envio da proposta no WhatsApp
+- assinatura e aprovação incluídas no PDF/laudo
